@@ -2,347 +2,98 @@
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Álbum de Figurinhas 2026</title>
     <style>
-        * { box-sizing: border-box; }
-        
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #cbd5e1; margin: 0; -webkit-tap-highlight-color: transparent; }
-        h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .sync-container { display: flex; justify-content: center; margin-bottom: 25px; }
-        .btn-share { background-color: #25d366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 8px; }
-        .btn-share:active { opacity: 0.8; transform: scale(0.95); }
-
-        .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .grupo h2 { font-size: 1.2rem; margin: 0 0 15px 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        
-        .selecao-titulo { font-size: 1rem; color: #475569; margin: 15px 0 10px 0; font-weight: bold; }
-        
-        .figurinhas-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        
-        .fig { 
-            aspect-ratio: 1 / 1;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-radius: 6px; font-weight: 800; text-align: center; line-height: 1.1;
-            font-size: clamp(9px, 2.5vw, 13px);
-            cursor: pointer;
-            border: 2px solid var(--cor-borda);
-            user-select: none; -webkit-user-select: none;
-            transition: transform 0.1s ease, filter 0.1s ease, background-color 0.2s ease, opacity 0.2s ease;
-        }
-
-        .fig.highlight-press {
-            transform: scale(0.90);
-            filter: brightness(0.85);
-        }
-
-        /* ESTADO: FALTANDO (Espaço Vazio) */
-        .fig.faltando {
-            background: #f8fafc;
-            color: var(--cor-texto-faltando);
-            opacity: 0.6;
-            box-shadow: none;
-        }
-
-        /* ESTADO: ENCONTRADA (Figurinha Colada) */
-        .fig:not(.faltando) {
-            background: var(--cor-camisa);
-            color: var(--cor-texto-clara);
-            border-color: var(--cor-borda);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.25);
-            opacity: 1;
-        }
-
-        #progress-ring {
-            position: fixed;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            opacity: 0;
-            z-index: 9999;
-        }
+        body { font-family: sans-serif; padding: 10px; background-color: #cbd5e1; }
+        .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 10px; border-radius: 8px; }
+        .figurinhas-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .fig { aspect-ratio: 1/1; border: 2px solid #ccc; background: white; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; }
+        .fig.tenho { background: #3b82f6; color: white; border-color: #2563eb; }
+        .btn-share { margin: 10px auto; display: block; padding: 10px; }
     </style>
 </head>
 <body>
-
-    <svg id="progress-ring" width="140" height="140">
-        <circle cx="70" cy="70" r="60" stroke="rgba(0,0,0,0.15)" stroke-width="8" fill="none" />
-        <circle id="progress-ring-circle" cx="70" cy="70" r="60" stroke="#3498db" stroke-width="8" fill="none" 
-                stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 70 70)" stroke-linecap="round"/>
-    </svg>
-
-    <h1>Meu Álbum 2026</h1>
-    
-    <div class="sync-container">
-        <button class="btn-share" onclick="partilharLink()">📲 Partilhar Álbum (WhatsApp)</button>
-    </div>
-
+    <button class="btn-share" onclick="gerarSnapshot()">🔗 Gerar Snapshot (Compartilhar)</button>
     <div id="album-container"></div>
 
     <script>
-        const coresGrupos = {
-            'Inicio': '#808080', 'GrupoA': '#599b41', 'GrupoB': '#d3222a', 'GrupoC': '#ffcc00', 
-            'GrupoD': '#212869', 'GrupoE': '#ea1b23', 'GrupoF': '#008761', 'GrupoG': '#c7b6d1', 
-            'GrupoH': '#449999', 'GrupoI': '#3a2674', 'GrupoJ': '#f37861', 'GrupoK': '#dc1f26', 'GrupoL': '#b01c20',
-            'Fim': '#808080'
-        };
-
-        const albumData = [
-            { id: 'Inicio', nome: 'Início', equipes: [{ prefixo: 'FWC', nome: 'Cidades-Sede', start: 1, end: 8, cor: '#c0c0c0', txt: '#000000' }] },
-            { id: 'GrupoA', nome: 'Grupo A', equipes: [{ prefixo: 'MEX', nome: 'Mexico', total: 20, cor: '#006341', txt: '#ffffff' }, { prefixo: 'RSA', nome: 'South Africa', total: 20, cor: '#FFB81C', txt: '#000000' }, { prefixo: 'KOR', nome: 'Korea Republic', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'CZE', nome: 'Czechia', total: 20, cor: '#ED1B24', txt: '#ffffff' }] },
-            { id: 'GrupoB', nome: 'Grupo B', equipes: [{ prefixo: 'CAN', nome: 'Canada', total: 20, cor: '#C5281C', txt: '#ffffff' }, { prefixo: 'BIH', nome: 'Bosnia-Herzegovina', total: 20, cor: '#002F6C', txt: '#ffffff' }, { prefixo: 'QAT', nome: 'Qatar', total: 20, cor: '#8A1538', txt: '#ffffff' }, { prefixo: 'SUI', nome: 'Switzerland', total: 20, cor: '#FF0000', txt: '#ffffff' }] },
-            { id: 'GrupoC', nome: 'Grupo C', equipes: [{ prefixo: 'BRA', nome: 'Brazil', total: 20, cor: '#FFDC02', txt: '#000000' }, { prefixo: 'MAR', nome: 'Morocco', total: 20, cor: '#C1272D', txt: '#ffffff' }, { prefixo: 'HAI', nome: 'Haiti', total: 20, cor: '#00205B', txt: '#ffffff' }, { prefixo: 'SCO', nome: 'Scotland', total: 20, cor: '#001B49', txt: '#ffffff' }] },
-            { id: 'GrupoD', nome: 'Grupo D', equipes: [{ prefixo: 'USA', nome: 'USA', total: 20, cor: '#002868', txt: '#ffffff' }, { prefixo: 'PAR', nome: 'Paraguay', total: 20, cor: '#D52B1E', txt: '#ffffff' }, { prefixo: 'AUS', nome: 'Australia', total: 20, cor: '#FFCD00', txt: '#000000' }, { prefixo: 'TUR', nome: 'Türkiye', total: 20, cor: '#E30A17', txt: '#ffffff' }] },
-            { id: 'GrupoE', nome: 'Grupo E', equipes: [{ prefixo: 'GER', nome: 'Germany', total: 20, cor: '#111111', txt: '#ffffff' }, { prefixo: 'CUW', nome: 'Curaçao', total: 20, cor: '#002776', txt: '#ffffff' }, { prefixo: 'CIV', nome: 'Côte d\'Ivoire', total: 20, cor: '#F77F00', txt: '#000000' }, { prefixo: 'ECU', nome: 'Ecuador', total: 20, cor: '#FFDD00', txt: '#000000' }] },
-            { id: 'GrupoF', nome: 'Grupo F', equipes: [{ prefixo: 'NED', nome: 'Netherlands', total: 20, cor: '#F36C21', txt: '#ffffff' }, { prefixo: 'JPN', nome: 'Japan', total: 20, cor: '#000555', txt: '#ffffff' }, { prefixo: 'SWE', nome: 'Sweden', total: 20, cor: '#FFF200', txt: '#000000' }, { prefixo: 'TUN', nome: 'Tunisia', total: 20, cor: '#E70013', txt: '#ffffff' }] },
-            { id: 'GrupoG', nome: 'Grupo G', equipes: [{ prefixo: 'BEL', nome: 'Belgium', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'EGY', nome: 'Egypt', total: 20, cor: '#C8102E', txt: '#ffffff' }, { prefixo: 'IRN', nome: 'IR Iran', total: 20, cor: '#15A05C', txt: '#ffffff' }, { prefixo: 'NZL', nome: 'New Zealand', total: 20, cor: '#111111', txt: '#ffffff' }] },
-            { id: 'GrupoH', nome: 'Grupo H', equipes: [{ prefixo: 'ESP', nome: 'Spain', total: 20, cor: '#C60B1E', txt: '#ffffff' }, { prefixo: 'CPV', nome: 'Cabo Verde', total: 20, cor: '#003893', txt: '#ffffff' }, { prefixo: 'KSA', nome: 'Saudi Arabia', total: 20, cor: '#006C35', txt: '#ffffff' }, { prefixo: 'URU', nome: 'Uruguai', total: 20, cor: '#5CB4E5', txt: '#000000' }] },
-            { id: 'GrupoI', nome: 'Grupo I', equipes: [{ prefixo: 'FRA', nome: 'France', total: 20, cor: '#002654', txt: '#ffffff' }, { prefixo: 'SEN', nome: 'Senegal', total: 20, cor: '#00853F', txt: '#ffffff' }, { prefixo: 'IRQ', nome: 'Iraq', total: 20, cor: '#007A3D', txt: '#ffffff' }, { prefixo: 'NOR', nome: 'Norway', total: 20, cor: '#C8102E', txt: '#ffffff' }] },
-            { id: 'GrupoJ', nome: 'Grupo J', equipes: [{ prefixo: 'ARG', nome: 'Argentina', total: 20, cor: '#43A1D5', txt: '#000000' }, { prefixo: 'ALG', nome: 'Algeria', total: 20, cor: '#006233', txt: '#ffffff' }, { prefixo: 'AUT', nome: 'Austria', total: 20, cor: '#ED2939', txt: '#ffffff' }, { prefixo: 'JOR', nome: 'Jordan', total: 20, cor: '#E30A17', txt: '#ffffff' }] },
-            { id: 'GrupoK', nome: 'Grupo K', equipes: [{ prefixo: 'POR', nome: 'Portugal', total: 20, cor: '#DA291C', txt: '#ffffff' }, { prefixo: 'COD', nome: 'Congo DR', total: 20, cor: '#00AEEF', txt: '#000000' }, { prefixo: 'UZB', nome: 'Uzbekistan', total: 20, cor: '#0099B5', txt: '#ffffff' }, { prefixo: 'COL', nome: 'Colombia', total: 20, cor: '#FCD116', txt: '#000000' }] },
-            { id: 'GrupoL', nome: 'Grupo L', equipes: [{ prefixo: 'ENG', nome: 'England', total: 20, cor: '#CE1126', txt: '#ffffff' }, { prefixo: 'CRO', nome: 'Croatia', total: 20, cor: '#ED1C24', txt: '#ffffff' }, { prefixo: 'GHA', nome: 'Ghana', total: 20, cor: '#FCD116', txt: '#000000' }, { prefixo: 'PAN', nome: 'Panama', total: 20, cor: '#DA291C', txt: '#ffffff' }] },
-            { id: 'Fim', nome: 'História (Museu FIFA)', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup History', start: 9, end: 20, cor: '#c0c0c0', txt: '#000000' }] }
+        // Lista na ordem exata que você quer percorrer
+        const estrutura = [
+            { id: 'Inicio', nome: 'Início', prefixo: 'FWC', start: 1, end: 8 },
+            { id: 'GrupoA', nome: 'Grupo A', equipes: ['MEX', 'RSA', 'KOR', 'CZE'] },
+            { id: 'GrupoB', nome: 'Grupo B', equipes: ['CAN', 'BIH', 'QAT', 'SUI'] },
+            { id: 'GrupoC', nome: 'Grupo C', equipes: ['BRA', 'MAR', 'HAI', 'SCO'] },
+            { id: 'GrupoD', nome: 'Grupo D', equipes: ['USA', 'PAR', 'AUS', 'TUR'] },
+            { id: 'GrupoE', nome: 'Grupo E', equipes: ['GER', 'CUW', 'CIV', 'ECU'] },
+            { id: 'GrupoF', nome: 'Grupo F', equipes: ['NED', 'JPN', 'SWE', 'TUN'] },
+            { id: 'GrupoG', nome: 'Grupo G', equipes: ['BEL', 'EGY', 'IRN', 'NZL'] },
+            { id: 'GrupoH', nome: 'Grupo H', equipes: ['ESP', 'CPV', 'KSA', 'URU'] },
+            { id: 'GrupoI', nome: 'Grupo I', equipes: ['FRA', 'SEN', 'IRQ', 'NOR'] },
+            { id: 'GrupoJ', nome: 'Grupo J', equipes: ['ARG', 'ALG', 'AUT', 'JOR'] },
+            { id: 'GrupoK', nome: 'Grupo K', equipes: ['POR', 'COD', 'UZB', 'COL'] },
+            { id: 'GrupoL', nome: 'Grupo L', equipes: ['ENG', 'CRO', 'GHA', 'PAN'] },
+            { id: 'Fim', nome: 'História (Museu FIFA)', prefixo: 'FWC', start: 9, end: 20 }
         ];
 
-        // LÓGICA DE COMPRESSÃO (Base64URL) ===============================
-        function exportarCompactado() {
-            let binStr = "";
-            albumData.forEach(grupo => {
-                grupo.equipes.forEach(equipe => {
-                    const inicioNum = equipe.start || 1;
-                    const fimNum = equipe.end || equipe.total;
-                    for (let i = inicioNum; i <= fimNum; i++) {
-                        const figId = `${equipe.prefixo} ${i}`;
-                        // 'false' significa que já TEM a figurinha (logo, bit 1)
-                        const temos = localStorage.getItem(figId) === 'false';
-                        binStr += temos ? '1' : '0';
-                    }
-                });
+        function getOrdem() {
+            let lista = [];
+            estrutura.forEach(g => {
+                if(g.equipes) {
+                    g.equipes.forEach(pref => { for(let i=1; i<=20; i++) lista.push(pref + " " + i); });
+                } else {
+                    for(let i=g.start; i<=g.end; i++) lista.push(g.prefixo + " " + i);
+                }
             });
-
-            let b64 = "";
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-            for (let i = 0; i < binStr.length; i += 6) {
-                let chunk = binStr.substring(i, i + 6);
-                chunk = chunk.padEnd(6, '0');
-                b64 += chars[parseInt(chunk, 2)];
-            }
-            return b64;
-        }
-
-        function importarCompactado(b64Str) {
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-            let binStr = "";
-            for (let i = 0; i < b64Str.length; i++) {
-                let val = chars.indexOf(b64Str[i]);
-                if (val === -1) continue;
-                binStr += val.toString(2).padStart(6, '0');
-            }
-
-            let index = 0;
-            localStorage.clear(); 
-            
-            albumData.forEach(grupo => {
-                grupo.equipes.forEach(equipe => {
-                    const inicioNum = equipe.start || 1;
-                    const fimNum = equipe.end || equipe.total;
-                    for (let i = inicioNum; i <= fimNum; i++) {
-                        const figId = `${equipe.prefixo} ${i}`;
-                        const bit = binStr[index] || '0';
-                        // Se o bit é '1', TEM a figurinha. Gravamos 'false' para a propriedade 'faltando'
-                        localStorage.setItem(figId, (bit === '1') ? 'false' : 'true');
-                        index++;
-                    }
-                });
-            });
-        }
-
-        function partilharLink() {
-            let b64Code = exportarCompactado();
-            let url = window.location.origin + window.location.pathname + "?backup=" + b64Code;
-            
-            navigator.clipboard.writeText(url).then(() => {
-                alert("✅ Link Ultra-Comprimido copiado com sucesso!\n\nCole no WhatsApp. O tamanho do código agora é perfeitamente limpo.");
-            }).catch(() => {
-                prompt("O seu navegador bloqueou a cópia automática. Copie o link abaixo:", url);
-            });
-        }
-
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const backup = urlParams.get('backup');
-            
-            if (backup && backup.match(/^[A-Za-z0-9\-_]+$/)) {
-                importarCompactado(backup);
-                window.history.replaceState({}, document.title, window.location.pathname);
-                alert("🎉 Sincronização concluída! O álbum foi reconstruído perfeitamente.");
-            }
-            renderizar();
-        };
-        // ================================================================
-
-        const svgRing = document.getElementById('progress-ring');
-        const circleRing = document.getElementById('progress-ring-circle');
-
-        function mixWhite(hex, percent) {
-            let r = parseInt(hex.substring(1, 3), 16), g = parseInt(hex.substring(3, 5), 16), b = parseInt(hex.substring(5, 7), 16);
-            return `rgb(${Math.round(r + (255 - r) * percent)}, ${Math.round(g + (255 - g) * percent)}, ${Math.round(b + (255 - b) * percent)})`;
-        }
-        function mixBlack(hex, percent) {
-            let r = parseInt(hex.substring(1, 3), 16), g = parseInt(hex.substring(3, 5), 16), b = parseInt(hex.substring(5, 7), 16);
-            return `rgb(${Math.round(r * (1 - percent))}, ${Math.round(g * (1 - percent))}, ${Math.round(b * (1 - percent))})`;
-        }
-
-        // AGORA É ZERADO (VAZIO) POR DEFEITO! Se não existir no localStorage, "falta" (true)
-        function isFaltando(id) {
-            const salvo = localStorage.getItem(id);
-            return salvo === null ? true : salvo === 'true'; 
-        }
-
-        function toggleSticker(id, elemento) {
-            const estavaFaltando = isFaltando(id);
-            const agoraFalta = !estavaFaltando; 
-            
-            localStorage.setItem(id, agoraFalta.toString());
-            
-            if (agoraFalta) {
-                elemento.classList.add('faltando');
-            } else {
-                elemento.classList.remove('faltando');
-            }
-            
-            if(navigator.vibrate) navigator.vibrate(50);
-        }
-
-        function iniciarAnimaçãoCronometro(x, y) {
-            svgRing.style.left = x + 'px';
-            svgRing.style.top = y + 'px';
-            svgRing.style.opacity = '1';
-            
-            circleRing.style.transition = 'none';
-            circleRing.style.strokeDashoffset = '377';
-            
-            setTimeout(() => {
-                circleRing.style.transition = 'stroke-dashoffset 1.5s linear';
-                circleRing.style.strokeDashoffset = '0';
-            }, 30);
-        }
-
-        function pararProgresso() {
-            circleRing.style.transition = 'none';
-            circleRing.style.strokeDashoffset = '377'; 
-            svgRing.style.opacity = '0'; 
+            return lista;
         }
 
         function renderizar() {
             const container = document.getElementById('album-container');
             container.innerHTML = '';
+            const ordem = getOrdem();
             
-            albumData.forEach(grupo => {
-                const corDoGrupo = coresGrupos[grupo.id];
-                const divGrupo = document.createElement('div');
-                divGrupo.className = 'grupo';
-                divGrupo.innerHTML = `<h2 style="color: ${corDoGrupo}; border-bottom-color: ${corDoGrupo}55;">${grupo.nome}</h2>`;
+            estrutura.forEach(g => {
+                const divG = document.createElement('div');
+                divG.className = 'grupo';
+                divG.innerHTML = `<h2>${g.nome}</h2><div class="figurinhas-grid"></div>`;
+                const grid = divG.querySelector('.figurinhas-grid');
                 
-                grupo.equipes.forEach(equipe => {
-                    const divEquipe = document.createElement('div');
-                    divEquipe.innerHTML = `<div class="selecao-titulo">${equipe.nome}</div>`;
-                    
-                    const grid = document.createElement('div');
-                    grid.className = 'figurinhas-grid';
-                    
-                    const inicioNum = equipe.start || 1;
-                    const fimNum = equipe.end || equipe.total;
+                let range = g.equipes ? null : {s: g.start, e: g.end, p: g.prefixo};
+                let itens = g.equipes ? g.equipes.flatMap(p => Array.from({length:20}, (_,i)=>p+" "+(i+1))) : Array.from({length:range.e-range.s+1}, (_,i)=>range.p+" "+(i+range.s));
 
-                    for (let i = inicioNum; i <= fimNum; i++) {
-                        const figId = `${equipe.prefixo} ${i}`;
-                        const divFig = document.createElement('div');
-                        
-                        divFig.className = 'fig';
-                        divFig.innerHTML = `<span>${equipe.prefixo}</span><span>${i}</span>`;
-                        
-                        let borderC = equipe.cor;
-                        let txtFaltando = equipe.cor;
-                        
-                        if (equipe.cor.toUpperCase() === '#FFFFFF') {
-                            borderC = '#a0aec0';
-                            txtFaltando = '#64748b'; 
-                        }
-                        
-                        let txtTomSobreTom = equipe.txt === '#ffffff' ? mixWhite(equipe.cor, 0.65) : mixBlack(equipe.cor, 0.45);
-
-                        divFig.style.setProperty('--cor-camisa', equipe.cor);
-                        divFig.style.setProperty('--cor-borda', borderC);
-                        divFig.style.setProperty('--cor-texto-faltando', txtFaltando);
-                        divFig.style.setProperty('--cor-texto-clara', txtTomSobreTom);
-                        
-                        if (isFaltando(figId)) {
-                            divFig.classList.add('faltando');
-                        }
-
-                        let timerEspera = null;
-                        let timerAcao = null;
-                        let startX = 0, startY = 0;
-                        let elementoAtivo = null;
-
-                        const limpaTimers = () => {
-                            clearTimeout(timerEspera);
-                            clearTimeout(timerAcao);
-                            if (elementoAtivo) {
-                                elementoAtivo.classList.remove('highlight-press');
-                                elementoAtivo = null;
-                            }
-                            pararProgresso();
-                        };
-
-                        const onStart = (e) => {
-                            limpaTimers();
-                            let touch = e.touches ? e.touches[0] : e;
-                            startX = touch.clientX;
-                            startY = touch.clientY;
-                            elementoAtivo = divFig;
-
-                            timerEspera = setTimeout(() => {
-                                elementoAtivo.classList.add('highlight-press');
-                                iniciarAnimaçãoCronometro(startX, startY);
-                                
-                                timerAcao = setTimeout(() => {
-                                    toggleSticker(figId, elementoAtivo);
-                                    limpaTimers();
-                                }, 1500); 
-
-                            }, 500);
-                        };
-
-                        const onMove = (e) => {
-                            if (!elementoAtivo) return;
-                            let touch = e.touches ? e.touches[0] : e;
-                            let movX = Math.abs(touch.clientX - startX);
-                            let movY = Math.abs(touch.clientY - startY);
-                            if (movX > 10 || movY > 10) {
-                                limpaTimers();
-                            }
-                        };
-
-                        divFig.addEventListener('touchstart', onStart, {passive: true});
-                        divFig.addEventListener('touchmove', onMove, {passive: true});
-                        divFig.addEventListener('touchend', limpaTimers);
-                        divFig.addEventListener('touchcancel', limpaTimers);
-                        
-                        divFig.addEventListener('mousedown', onStart);
-                        divFig.addEventListener('mousemove', onMove);
-                        divFig.addEventListener('mouseup', limpaTimers);
-                        divFig.addEventListener('mouseleave', limpaTimers);
-                        divFig.addEventListener('contextmenu', e => e.preventDefault());
-
-                        grid.appendChild(divFig);
-                    }
-                    divEquipe.appendChild(grid);
-                    divGrupo.appendChild(divEquipe);
+                itens.forEach(id => {
+                    const el = document.createElement('div');
+                    el.className = 'fig ' + (localStorage.getItem(id) === '1' ? 'tenho' : '');
+                    el.innerText = id;
+                    el.onclick = () => {
+                        let estado = localStorage.getItem(id) === '1' ? '0' : '1';
+                        localStorage.setItem(id, estado);
+                        el.className = 'fig ' + (estado === '1' ? 'tenho' : '');
+                    };
+                    grid.appendChild(el);
                 });
-                container.appendChild(divGrupo);
+                container.appendChild(divG);
             });
         }
+
+        function gerarSnapshot() {
+            const ordem = getOrdem();
+            let bin = ordem.map(id => localStorage.getItem(id) === '1' ? '1' : '0').join('');
+            let hex = "";
+            for(let i=0; i<bin.length; i+=4) hex += parseInt(bin.substr(i,4).padEnd(4,'0'), 2).toString(16);
+            let url = window.location.origin + window.location.pathname + "?snapshot=" + hex;
+            prompt("Copie o link:", url);
+        }
+
+        window.onload = () => {
+            const params = new URLSearchParams(window.location.search);
+            const snap = params.get('snapshot');
+            if(snap) {
+                let bin = [...snap].map(h => parseInt(h,16).toString(2).padStart(4,'0')).join('');
+                getOrdem().forEach((id, i) => localStorage.setItem(id, bin[i] || '0'));
+            }
+            renderizar();
+        };
     </script>
 </body>
 </html>
