@@ -6,13 +6,16 @@
     <title>Álbum de Figurinhas 2026</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #f4f4f9; margin: 0; -webkit-tap-highlight-color: transparent; }
-        h1 { text-align: center; color: #333; font-size: 1.5rem; margin-bottom: 20px; }
         
-        .grupo { margin-bottom: 25px; background: white; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .grupo h2 { font-size: 1.2rem; margin: 0 0 15px 0; border-bottom: 2px solid #eee; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        /* Fundo da página cinza neutro */
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #cbd5e1; margin: 0; -webkit-tap-highlight-color: transparent; }
+        h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
         
-        .selecao-titulo { font-size: 1rem; color: #666; margin: 15px 0 10px 0; font-weight: bold; }
+        /* Fundo do grupo num cinza um pouco mais claro para destacar */
+        .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .grupo h2 { font-size: 1.2rem; margin: 0 0 15px 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .selecao-titulo { font-size: 1rem; color: #475569; margin: 15px 0 10px 0; font-weight: bold; }
         
         .figurinhas-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         
@@ -32,18 +35,22 @@
             filter: brightness(0.85);
         }
 
+        /* ESTADO: FALTANDO (Espaço Vazio) */
         .fig.faltando {
-            background: #ffffff;
+            background: #f8fafc;
             color: var(--cor-texto-faltando);
+            opacity: 0.6; /* Fica parecendo a impressão no papel */
         }
 
+        /* ESTADO: ENCONTRADA (Figurinha Colada) */
         .fig:not(.faltando) {
             background: var(--cor-camisa);
             color: var(--cor-texto-clara);
-            border-color: var(--cor-camisa);
+            border-color: var(--cor-borda);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.25); /* Sombra 3D */
+            opacity: 1;
         }
 
-        /* Mudança aqui: usando opacity em vez de display: none */
         #progress-ring {
             position: fixed;
             pointer-events: none;
@@ -121,16 +128,14 @@
             if(navigator.vibrate) navigator.vibrate(50);
         }
 
-        // Lógica corrigida da animação
         function iniciarAnimaçãoCronometro(x, y) {
             svgRing.style.left = x + 'px';
             svgRing.style.top = y + 'px';
-            svgRing.style.opacity = '1'; // Mostra o anel
+            svgRing.style.opacity = '1';
             
             circleRing.style.transition = 'none';
             circleRing.style.strokeDashoffset = '377';
             
-            // Timeout garante que o navegador renderize o "vazio" antes de animar pro "cheio"
             setTimeout(() => {
                 circleRing.style.transition = 'stroke-dashoffset 1.5s linear';
                 circleRing.style.strokeDashoffset = '0';
@@ -140,7 +145,7 @@
         function pararProgresso() {
             circleRing.style.transition = 'none';
             circleRing.style.strokeDashoffset = '377'; 
-            svgRing.style.opacity = '0'; // Esconde o anel
+            svgRing.style.opacity = '0'; 
         }
 
         function renderizar() {
@@ -168,9 +173,11 @@
                         
                         let borderC = equipe.cor;
                         let txtFaltando = equipe.cor;
+                        
+                        // Tratamento para camisas brancas aparecerem no fundo cinza
                         if (equipe.cor.toUpperCase() === '#FFFFFF') {
-                            borderC = '#cccccc';
-                            txtFaltando = '#555555';
+                            borderC = '#a0aec0'; // Cinza intermediário para a borda
+                            txtFaltando = '#64748b'; // Cinza escuro para o texto faltante
                         }
                         
                         let txtTomSobreTom = equipe.txt === '#ffffff' ? mixWhite(equipe.cor, 0.65) : mixBlack(equipe.cor, 0.45);
