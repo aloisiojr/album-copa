@@ -2,22 +2,36 @@
 <html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Álbum de Figurinhas 2026</title>
     <style>
-        body { font-family: sans-serif; padding: 10px; background-color: #cbd5e1; }
-        .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 10px; border-radius: 8px; }
-        .figurinhas-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
-        .fig { aspect-ratio: 1/1; border: 2px solid #ccc; background: white; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; }
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #cbd5e1; margin: 0; }
+        h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 15px; text-transform: uppercase; }
+        
+        .sync-container { display: flex; justify-content: center; margin-bottom: 25px; }
+        .btn-share { background-color: #25d366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .grupo h2 { font-size: 1.2rem; margin: 0 0 15px 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; color: #1e3a8a; }
+        
+        .figurinhas-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+        .fig { 
+            aspect-ratio: 1 / 1; border-radius: 6px; font-weight: 800; font-size: 10px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            border: 2px solid #94a3b8; background: #f8fafc; cursor: pointer;
+        }
         .fig.tenho { background: #3b82f6; color: white; border-color: #2563eb; }
-        .btn-share { margin: 10px auto; display: block; padding: 10px; }
     </style>
 </head>
 <body>
-    <button class="btn-share" onclick="gerarSnapshot()">🔗 Gerar Snapshot (Compartilhar)</button>
+    <h1>Meu Álbum 2026</h1>
+    <div class="sync-container">
+        <button class="btn-share" onclick="gerarSnapshot()">📲 Partilhar Álbum (WhatsApp)</button>
+    </div>
     <div id="album-container"></div>
 
     <script>
-        // Lista na ordem exata que você quer percorrer
         const estrutura = [
             { id: 'Inicio', nome: 'Início', prefixo: 'FWC', start: 1, end: 8 },
             { id: 'GrupoA', nome: 'Grupo A', equipes: ['MEX', 'RSA', 'KOR', 'CZE'] },
@@ -50,7 +64,6 @@
         function renderizar() {
             const container = document.getElementById('album-container');
             container.innerHTML = '';
-            const ordem = getOrdem();
             
             estrutura.forEach(g => {
                 const divG = document.createElement('div');
@@ -58,17 +71,16 @@
                 divG.innerHTML = `<h2>${g.nome}</h2><div class="figurinhas-grid"></div>`;
                 const grid = divG.querySelector('.figurinhas-grid');
                 
-                let range = g.equipes ? null : {s: g.start, e: g.end, p: g.prefixo};
-                let itens = g.equipes ? g.equipes.flatMap(p => Array.from({length:20}, (_,i)=>p+" "+(i+1))) : Array.from({length:range.e-range.s+1}, (_,i)=>range.p+" "+(i+range.s));
+                let itens = g.equipes ? g.equipes.flatMap(p => Array.from({length:20}, (_,i)=>p+" "+(i+1))) : Array.from({length:g.end-g.start+1}, (_,i)=>g.prefixo+" "+(i+g.start));
 
                 itens.forEach(id => {
                     const el = document.createElement('div');
                     el.className = 'fig ' + (localStorage.getItem(id) === '1' ? 'tenho' : '');
                     el.innerText = id;
                     el.onclick = () => {
-                        let estado = localStorage.getItem(id) === '1' ? '0' : '1';
-                        localStorage.setItem(id, estado);
-                        el.className = 'fig ' + (estado === '1' ? 'tenho' : '');
+                        let novoEstado = localStorage.getItem(id) === '1' ? '0' : '1';
+                        localStorage.setItem(id, novoEstado);
+                        el.className = 'fig ' + (novoEstado === '1' ? 'tenho' : '');
                     };
                     grid.appendChild(el);
                 });
@@ -77,12 +89,12 @@
         }
 
         function gerarSnapshot() {
-            const ordem = getOrdem();
-            let bin = ordem.map(id => localStorage.getItem(id) === '1' ? '1' : '0').join('');
+            let bin = getOrdem().map(id => localStorage.getItem(id) === '1' ? '1' : '0').join('');
             let hex = "";
             for(let i=0; i<bin.length; i+=4) hex += parseInt(bin.substr(i,4).padEnd(4,'0'), 2).toString(16);
             let url = window.location.origin + window.location.pathname + "?snapshot=" + hex;
-            prompt("Copie o link:", url);
+            navigator.clipboard.writeText(url);
+            alert("✅ Link copiado!");
         }
 
         window.onload = () => {
@@ -91,6 +103,7 @@
             if(snap) {
                 let bin = [...snap].map(h => parseInt(h,16).toString(2).padStart(4,'0')).join('');
                 getOrdem().forEach((id, i) => localStorage.setItem(id, bin[i] || '0'));
+                window.history.replaceState({}, '', window.location.pathname);
             }
             renderizar();
         };
