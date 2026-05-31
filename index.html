@@ -10,12 +10,26 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #cbd5e1; margin: 0; -webkit-tap-highlight-color: transparent; }
         h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
         
-        .sync-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
-        .btn-share { background-color: #25d366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 8px; }
-        .btn-share:active { opacity: 0.8; transform: scale(0.95); }
+        /* Botões Discretos e Lado a Lado */
+        .sync-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
+        
+        .btn-base { 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            font-weight: 600; 
+            font-size: 0.8rem; 
+            cursor: pointer; 
+            transition: opacity 0.2s, transform 0.1s; 
+            display: flex; 
+            align-items: center; 
+            gap: 5px; 
+            border: 1px solid;
+            box-shadow: none;
+        }
+        .btn-base:active { opacity: 0.8; transform: scale(0.95); }
 
-        .btn-clear { background-color: #ef4444; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 8px; }
-        .btn-clear:active { opacity: 0.8; transform: scale(0.95); }
+        .btn-share { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+        .btn-clear { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 
         .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .grupo h2 { font-size: 1.2rem; margin: 0 0 15px 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
@@ -77,8 +91,8 @@
     <h1>Meu Álbum 2026</h1>
     
     <div class="sync-container">
-        <button class="btn-share" onclick="partilharLink()">📲 Partilhar (WhatsApp)</button>
-        <button class="btn-clear" onclick="limparAlbum()">🗑️ Limpar Meu Álbum</button>
+        <button class="btn-base btn-share" onclick="partilharLink()">🔗 Compartilhar Meu Preenchimento</button>
+        <button class="btn-base btn-clear" onclick="limparAlbum()">🗑️ Zerar Meu Álbum</button>
     </div>
 
     <div id="album-container"></div>
@@ -117,7 +131,6 @@
                     const fimNum = equipe.end || equipe.total;
                     for (let i = inicioNum; i <= fimNum; i++) {
                         const figId = `${equipe.prefixo} ${i}`;
-                        // 'false' significa que já TEM a figurinha (logo, bit 1)
                         const temos = localStorage.getItem(figId) === 'false';
                         binStr += temos ? '1' : '0';
                     }
@@ -153,12 +166,12 @@
                     for (let i = inicioNum; i <= fimNum; i++) {
                         const figId = `${equipe.prefixo} ${i}`;
                         const bit = binStr[index] || '0';
-                        // Se o bit é '1', TEM a figurinha. Gravamos 'false' para a propriedade 'faltando'
                         localStorage.setItem(figId, (bit === '1') ? 'false' : 'true');
                         index++;
                     }
                 });
             });
+            localStorage.setItem('album_limpo', 'true');
         }
 
         function partilharLink() {
@@ -172,22 +185,21 @@
             });
         }
 
-        // Nova Função: Limpar Álbum com Backup Seguro
         function limparAlbum() {
-            if(confirm("⚠️ Tem a certeza que deseja apagar todo o seu progresso neste telemóvel?")) {
+            if(confirm("⚠️ Tem a certeza que deseja zerar todo o seu álbum?")) {
                 let b64Code = exportarCompactado();
                 let url = window.location.origin + window.location.pathname + "?backup=" + b64Code;
                 
                 navigator.clipboard.writeText(url).then(() => {
                     localStorage.clear();
                     renderizar();
-                    alert("🗑️ Álbum limpo com sucesso!\n\nUm link com o seu backup antigo foi copiado para a área de transferência por segurança.");
+                    alert("🗑️ Álbum zerado com sucesso!\n\nUm link com o seu backup anterior foi copiado para a área de transferência por segurança.");
                 }).catch(() => {
-                    let resp = prompt("Para segurança, guarde este link de backup antes de limpar o álbum:", url);
+                    let resp = prompt("Para segurança, guarde este link de backup antes de zerar o álbum:", url);
                     if(resp !== null) {
                         localStorage.clear();
                         renderizar();
-                        alert("🗑️ Álbum limpo com sucesso!");
+                        alert("🗑️ Álbum zerado com sucesso!");
                     }
                 });
             }
@@ -200,11 +212,13 @@
             if (backup && backup.match(/^[A-Za-z0-9\-_]+$/)) {
                 importarCompactado(backup);
                 window.history.replaceState({}, document.title, window.location.pathname);
-                alert("🎉 Sincronização concluída! O álbum foi reconstruído perfeitamente.");
+                alert("🎉 Sincronização concluída! O álbum foi preenchido perfeitamente.");
+            } else if (localStorage.getItem('album_limpo') !== 'true') {
+                localStorage.clear();
+                localStorage.setItem('album_limpo', 'true');
             }
             renderizar();
         };
-        // ================================================================
 
         const svgRing = document.getElementById('progress-ring');
         const circleRing = document.getElementById('progress-ring-circle');
@@ -218,7 +232,6 @@
             return `rgb(${Math.round(r * (1 - percent))}, ${Math.round(g * (1 - percent))}, ${Math.round(b * (1 - percent))})`;
         }
 
-        // AGORA É ZERADO (VAZIO) POR DEFEITO! Se não existir no localStorage, "falta" (true)
         function isFaltando(id) {
             const salvo = localStorage.getItem(id);
             return salvo === null ? true : salvo === 'true'; 
