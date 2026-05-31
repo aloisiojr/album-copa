@@ -87,7 +87,6 @@
             'Fim': '#808080'
         };
 
-        // Ordem EXATAMENTE fixa. São 980 figurinhas no total.
         const albumData = [
             { id: 'Inicio', nome: 'Início', equipes: [{ prefixo: 'FWC', nome: 'Cidades-Sede', start: 1, end: 8, cor: '#c0c0c0', txt: '#000000' }] },
             { id: 'GrupoA', nome: 'Grupo A', equipes: [{ prefixo: 'MEX', nome: 'Mexico', total: 20, cor: '#006341', txt: '#ffffff' }, { prefixo: 'RSA', nome: 'South Africa', total: 20, cor: '#FFB81C', txt: '#000000' }, { prefixo: 'KOR', nome: 'Korea Republic', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'CZE', nome: 'Czechia', total: 20, cor: '#ED1B24', txt: '#ffffff' }] },
@@ -105,8 +104,8 @@
             { id: 'Fim', nome: 'História (Museu FIFA)', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup History', start: 9, end: 20, cor: '#c0c0c0', txt: '#000000' }] }
         ];
 
-        // LÓGICA DE COMPRESSÃO (BITMASK -> HEX) ==========================
-        function exportarParaHex() {
+        // LÓGICA DE COMPRESSÃO (Base64URL) ===============================
+        function exportarCompactado() {
             let binStr = "";
             albumData.forEach(grupo => {
                 grupo.equipes.forEach(equipe => {
@@ -114,34 +113,34 @@
                     const fimNum = equipe.end || equipe.total;
                     for (let i = inicioNum; i <= fimNum; i++) {
                         const figId = `${equipe.prefixo} ${i}`;
-                        // Se for 'false', quer dizer que TEMOS a figurinha. (1 = Tem, 0 = Falta)
+                        // 'false' significa que já TEM a figurinha (logo, bit 1)
                         const temos = localStorage.getItem(figId) === 'false';
                         binStr += temos ? '1' : '0';
                     }
                 });
             });
 
-            // Converte os bits para Hexadecimal (cada 4 bits = 1 letra/número)
-            let hexStr = "";
-            for (let i = 0; i < binStr.length; i += 4) {
-                let chunk = binStr.substring(i, i + 4);
-                while (chunk.length < 4) chunk += '0'; // Garante tamanho
-                hexStr += parseInt(chunk, 2).toString(16);
+            let b64 = "";
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+            for (let i = 0; i < binStr.length; i += 6) {
+                let chunk = binStr.substring(i, i + 6);
+                chunk = chunk.padEnd(6, '0');
+                b64 += chars[parseInt(chunk, 2)];
             }
-            return hexStr;
+            return b64;
         }
 
-        function importarDeHex(hexStr) {
+        function importarCompactado(b64Str) {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
             let binStr = "";
-            // Converte o Hexadecimal de volta para Bits
-            for (let i = 0; i < hexStr.length; i++) {
-                let bin = parseInt(hexStr[i], 16).toString(2);
-                while (bin.length < 4) bin = '0' + bin;
-                binStr += bin;
+            for (let i = 0; i < b64Str.length; i++) {
+                let val = chars.indexOf(b64Str[i]);
+                if (val === -1) continue;
+                binStr += val.toString(2).padStart(6, '0');
             }
 
             let index = 0;
-            localStorage.clear(); // Limpa álbum antigo inteiro
+            localStorage.clear(); 
             
             albumData.forEach(grupo => {
                 grupo.equipes.forEach(equipe => {
@@ -150,7 +149,7 @@
                     for (let i = inicioNum; i <= fimNum; i++) {
                         const figId = `${equipe.prefixo} ${i}`;
                         const bit = binStr[index] || '0';
-                        // Se o bit for 1, ele TEM a figurinha (faltando = false)
+                        // Se o bit é '1', TEM a figurinha. Gravamos 'false' para a propriedade 'faltando'
                         localStorage.setItem(figId, (bit === '1') ? 'false' : 'true');
                         index++;
                     }
@@ -159,11 +158,11 @@
         }
 
         function partilharLink() {
-            let hexCode = exportarParaHex();
-            let url = window.location.origin + window.location.pathname + "?backup=" + hexCode;
+            let b64Code = exportarCompactado();
+            let url = window.location.origin + window.location.pathname + "?backup=" + b64Code;
             
             navigator.clipboard.writeText(url).then(() => {
-                alert("✅ Link super comprimido copiado com sucesso!\n\nCole no WhatsApp. O link agora é minúsculo!");
+                alert("✅ Link Ultra-Comprimido copiado com sucesso!\n\nCole no WhatsApp. O tamanho do código agora é perfeitamente limpo.");
             }).catch(() => {
                 prompt("O seu navegador bloqueou a cópia automática. Copie o link abaixo:", url);
             });
@@ -173,9 +172,8 @@
             const urlParams = new URLSearchParams(window.location.search);
             const backup = urlParams.get('backup');
             
-            if (backup && backup.match(/^[0-9a-fA-F]+$/)) {
-                importarDeHex(backup);
-                // Limpa o link na barra de cima para ficar bonitinho
+            if (backup && backup.match(/^[A-Za-z0-9\-_]+$/)) {
+                importarCompactado(backup);
                 window.history.replaceState({}, document.title, window.location.pathname);
                 alert("🎉 Sincronização concluída! O álbum foi reconstruído perfeitamente.");
             }
@@ -195,7 +193,7 @@
             return `rgb(${Math.round(r * (1 - percent))}, ${Math.round(g * (1 - percent))}, ${Math.round(b * (1 - percent))})`;
         }
 
-        // AGORA É VAZIO POR PADRÃO. Se não tiver no localStorage, "falta" = true.
+        // AGORA É ZERADO (VAZIO) POR DEFEITO! Se não existir no localStorage, "falta" (true)
         function isFaltando(id) {
             const salvo = localStorage.getItem(id);
             return salvo === null ? true : salvo === 'true'; 
