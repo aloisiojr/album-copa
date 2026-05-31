@@ -30,6 +30,7 @@
 
         .btn-share { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
         .btn-clear { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+        .btn-lock { background-color: #f1f5f9; color: #475569; border-color: #cbd5e1; }
 
         .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .grupo h2 { font-size: 1.2rem; margin: 0 0 15px 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
@@ -91,13 +92,23 @@
     <h1>Meu Álbum 2026</h1>
     
     <div class="sync-container">
-        <button class="btn-base btn-share" onclick="partilharLink()">🔗 Compartilhar Meu Preenchimento</button>
-        <button class="btn-base btn-clear" onclick="limparAlbum()">🗑️ Zerar Meu Álbum</button>
+        <button id="btn-lock-toggle" class="btn-base btn-lock" onclick="toggleLock()">🔒 Bloqueado</button>
+        <button class="btn-base btn-share" onclick="partilharLink()">🔗 Compartilhar</button>
+        <button class="btn-base btn-clear" onclick="limparAlbum()">🗑️ Zerar</button>
     </div>
 
     <div id="album-container"></div>
 
     <script>
+        let isLocked = true;
+        const btnLock = document.getElementById('btn-lock-toggle');
+
+        function toggleLock() {
+            isLocked = !isLocked;
+            btnLock.innerHTML = isLocked ? "🔒 Bloqueado" : "🔓 Desbloqueado";
+            btnLock.style.backgroundColor = isLocked ? "#f1f5f9" : "#e0f2fe";
+        }
+
         const coresGrupos = {
             'Inicio': '#808080', 'GrupoA': '#599b41', 'GrupoB': '#d3222a', 'GrupoC': '#ffcc00', 
             'GrupoD': '#212869', 'GrupoE': '#ea1b23', 'GrupoF': '#008761', 'GrupoG': '#c7b6d1', 
@@ -179,29 +190,17 @@
             let url = window.location.origin + window.location.pathname + "?backup=" + b64Code;
             
             navigator.clipboard.writeText(url).then(() => {
-                alert("✅ Link Ultra-Comprimido copiado com sucesso!\n\nCole no WhatsApp. O tamanho do código agora é perfeitamente limpo.");
+                alert("✅ Link copiado com sucesso!");
             }).catch(() => {
-                prompt("O seu navegador bloqueou a cópia automática. Copie o link abaixo:", url);
+                prompt("Copie o link abaixo:", url);
             });
         }
 
         function limparAlbum() {
             if(confirm("⚠️ Tem a certeza que deseja zerar todo o seu álbum?")) {
-                let b64Code = exportarCompactado();
-                let url = window.location.origin + window.location.pathname + "?backup=" + b64Code;
-                
-                navigator.clipboard.writeText(url).then(() => {
-                    localStorage.clear();
-                    renderizar();
-                    alert("🗑️ Álbum zerado com sucesso!\n\nUm link com o seu backup anterior foi copiado para a área de transferência por segurança.");
-                }).catch(() => {
-                    let resp = prompt("Para segurança, guarde este link de backup antes de zerar o álbum:", url);
-                    if(resp !== null) {
-                        localStorage.clear();
-                        renderizar();
-                        alert("🗑️ Álbum zerado com sucesso!");
-                    }
-                });
+                localStorage.clear();
+                renderizar();
+                alert("🗑️ Álbum zerado com sucesso!");
             }
         }
 
@@ -212,7 +211,7 @@
             if (backup && backup.match(/^[A-Za-z0-9\-_]+$/)) {
                 importarCompactado(backup);
                 window.history.replaceState({}, document.title, window.location.pathname);
-                alert("🎉 Sincronização concluída! O álbum foi preenchido perfeitamente.");
+                alert("🎉 Sincronização concluída!");
             } else if (localStorage.getItem('album_limpo') !== 'true') {
                 localStorage.clear();
                 localStorage.setItem('album_limpo', 'true');
@@ -335,6 +334,14 @@
 
                         const onStart = (e) => {
                             limpaTimers();
+                            
+                            // Se estiver desbloqueado, troca imediatamente
+                            if (!isLocked) {
+                                toggleSticker(figId, divFig);
+                                return;
+                            }
+
+                            // Se estiver bloqueado, usa a lógica de segurar
                             let touch = e.touches ? e.touches[0] : e;
                             startX = touch.clientX;
                             startY = touch.clientY;
