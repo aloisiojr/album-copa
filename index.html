@@ -6,64 +6,40 @@
     <title>Álbum de Figurinhas 2026</title>
     <style>
         * { box-sizing: border-box; }
-        
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #cbd5e1; margin: 0; -webkit-tap-highlight-color: transparent; }
         h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        
         .sync-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
-        
-        .btn-base { 
-            padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; 
-            transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 5px; border: 1px solid; box-shadow: none;
-        }
+        .btn-base { padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 5px; border: 1px solid; box-shadow: none; }
         .btn-base:active { opacity: 0.8; transform: scale(0.95); }
-
         .btn-share { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
         .btn-clear { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
         .btn-lock { background-color: #f1f5f9; color: #475569; border-color: #cbd5e1; }
-
         .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .grupo h2 { font-size: 1.2rem; margin: 0 0 15px 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        
         .selecao-titulo { font-size: 1rem; color: #475569; margin: 15px 0 10px 0; font-weight: bold; }
         .figurinhas-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        
-        .fig { 
-            aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-radius: 6px; font-weight: 800; text-align: center; line-height: 1.1; font-size: clamp(9px, 2.5vw, 13px);
-            cursor: pointer; border: 2px solid var(--cor-borda); user-select: none; -webkit-user-select: none;
-            transition: transform 0.1s ease, filter 0.1s ease, background-color 0.2s ease, opacity 0.2s ease;
-        }
-
+        .fig { aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-weight: 800; text-align: center; line-height: 1.1; font-size: clamp(9px, 2.5vw, 13px); cursor: pointer; border: 2px solid var(--cor-borda); user-select: none; -webkit-user-select: none; transition: transform 0.1s ease, filter 0.1s ease, background-color 0.2s ease, opacity 0.2s ease; }
         .fig.highlight-press { transform: scale(0.90); filter: brightness(0.85); }
         .fig.faltando { background: #f8fafc; color: var(--cor-texto-faltando); opacity: 0.6; box-shadow: none; }
         .fig:not(.faltando) { background: var(--cor-camisa); color: var(--cor-texto-clara); border-color: var(--cor-borda); box-shadow: 0 3px 6px rgba(0,0,0,0.25); opacity: 1; }
-
         #progress-ring { position: fixed; pointer-events: none; transform: translate(-50%, -50%); opacity: 0; z-index: 9999; }
     </style>
 </head>
 <body>
-
     <svg id="progress-ring" width="140" height="140">
         <circle cx="70" cy="70" r="60" stroke="rgba(0,0,0,0.15)" stroke-width="8" fill="none" />
-        <circle id="progress-ring-circle" cx="70" cy="70" r="60" stroke="#3498db" stroke-width="8" fill="none" 
-                stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 70 70)" stroke-linecap="round"/>
+        <circle id="progress-ring-circle" cx="70" cy="70" r="60" stroke="#3498db" stroke-width="8" fill="none" stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 70 70)" stroke-linecap="round"/>
     </svg>
-
     <h1>Meu Álbum 2026</h1>
-    
     <div class="sync-container">
         <button id="btn-lock-toggle" class="btn-base btn-lock" onclick="toggleLock()">🔒 Seguro</button>
         <button class="btn-base btn-share" onclick="partilharLink()">🔗 Compartilhar</button>
         <button class="btn-base btn-clear" onclick="limparAlbum()">🗑️ Zerar</button>
     </div>
-
     <div id="album-container"></div>
-
     <script>
         let isLocked = true;
         const btnLock = document.getElementById('btn-lock-toggle');
-
         function toggleLock() {
             isLocked = !isLocked;
             btnLock.innerHTML = isLocked ? "🔒 Seguro" : "🔓 Rápido";
@@ -71,26 +47,10 @@
         }
 
         const coresGrupos = { 'Inicio': '#808080', 'GrupoA': '#599b41', 'GrupoB': '#d3222a', 'GrupoC': '#ffcc00', 'GrupoD': '#212869', 'GrupoE': '#ea1b23', 'GrupoF': '#008761', 'GrupoG': '#c7b6d1', 'GrupoH': '#449999', 'GrupoI': '#3a2674', 'GrupoJ': '#f37861', 'GrupoK': '#dc1f26', 'GrupoL': '#b01c20', 'Fim': '#808080' };
-
-        const albumData = [
-            { id: 'Inicio', nome: 'Início', equipes: [{ prefixo: 'FWC', nome: 'Cidades-Sede', start: 1, end: 8, cor: '#c0c0c0', txt: '#000000' }] },
-            { id: 'GrupoA', nome: 'Grupo A', equipes: [{ prefixo: 'MEX', nome: 'Mexico', total: 20, cor: '#006341', txt: '#ffffff' }, { prefixo: 'RSA', nome: 'South Africa', total: 20, cor: '#FFB81C', txt: '#000000' }, { prefixo: 'KOR', nome: 'Korea Republic', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'CZE', nome: 'Czechia', total: 20, cor: '#ED1B24', txt: '#ffffff' }] },
-            { id: 'GrupoB', nome: 'Grupo B', equipes: [{ prefixo: 'CAN', nome: 'Canada', total: 20, cor: '#C5281C', txt: '#ffffff' }, { prefixo: 'BIH', nome: 'Bosnia-Herzegovina', total: 20, cor: '#002F6C', txt: '#ffffff' }, { prefixo: 'QAT', nome: 'Qatar', total: 20, cor: '#8A1538', txt: '#ffffff' }, { prefixo: 'SUI', nome: 'Switzerland', total: 20, cor: '#FF0000', txt: '#ffffff' }] },
-            { id: 'GrupoC', nome: 'Grupo C', equipes: [{ prefixo: 'BRA', nome: 'Brazil', total: 20, cor: '#FFDC02', txt: '#000000' }, { prefixo: 'MAR', nome: 'Morocco', total: 20, cor: '#C1272D', txt: '#ffffff' }, { prefixo: 'HAI', nome: 'Haiti', total: 20, cor: '#00205B', txt: '#ffffff' }, { prefixo: 'SCO', nome: 'Scotland', total: 20, cor: '#001B49', txt: '#ffffff' }] },
-            { id: 'GrupoD', nome: 'Grupo D', equipes: [{ prefixo: 'USA', nome: 'USA', total: 20, cor: '#002868', txt: '#ffffff' }, { prefixo: 'PAR', nome: 'Paraguay', total: 20, cor: '#D52B1E', txt: '#ffffff' }, { prefixo: 'AUS', nome: 'Australia', total: 20, cor: '#FFCD00', txt: '#000000' }, { prefixo: 'TUR', nome: 'Türkiye', total: 20, cor: '#E30A17', txt: '#ffffff' }] },
-            { id: 'GrupoE', nome: 'Grupo E', equipes: [{ prefixo: 'GER', nome: 'Germany', total: 20, cor: '#111111', txt: '#ffffff' }, { prefixo: 'CUW', nome: 'Curaçao', total: 20, cor: '#002776', txt: '#ffffff' }, { prefixo: 'CIV', nome: 'Côte d\'Ivoire', total: 20, cor: '#F77F00', txt: '#000000' }, { prefixo: 'ECU', nome: 'Ecuador', total: 20, cor: '#FFDD00', txt: '#000000' }] },
-            { id: 'GrupoF', nome: 'Grupo F', equipes: [{ prefixo: 'NED', nome: 'Netherlands', total: 20, cor: '#F36C21', txt: '#ffffff' }, { prefixo: 'JPN', nome: 'Japan', total: 20, cor: '#000555', txt: '#ffffff' }, { prefixo: 'SWE', nome: 'Sweden', total: 20, cor: '#FFF200', txt: '#000000' }, { prefixo: 'TUN', nome: 'Tunisia', total: 20, cor: '#E70013', txt: '#ffffff' }] },
-            { id: 'GrupoG', nome: 'Grupo G', equipes: [{ prefixo: 'BEL', nome: 'Belgium', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'EGY', nome: 'Egypt', total: 20, cor: '#C8102E', txt: '#ffffff' }, { prefixo: 'IRN', nome: 'IR Iran', total: 20, cor: '#15A05C', txt: '#ffffff' }, { prefixo: 'NZL', nome: 'New Zealand', total: 20, cor: '#111111', txt: '#ffffff' }] },
-            { id: 'GrupoH', nome: 'Grupo H', equipes: [{ prefixo: 'ESP', nome: 'Spain', total: 20, cor: '#C60B1E', txt: '#ffffff' }, { prefixo: 'CPV', nome: 'Cabo Verde', total: 20, cor: '#003893', txt: '#ffffff' }, { prefixo: 'KSA', nome: 'Saudi Arabia', total: 20, cor: '#006C35', txt: '#ffffff' }, { prefixo: 'URU', nome: 'Uruguai', total: 20, cor: '#5CB4E5', txt: '#000000' }] },
-            { id: 'GrupoI', nome: 'Grupo I', equipes: [{ prefixo: 'FRA', nome: 'France', total: 20, cor: '#002654', txt: '#ffffff' }, { prefixo: 'SEN', nome: 'Senegal', total: 20, cor: '#00853F', txt: '#ffffff' }, { prefixo: 'IRQ', nome: 'Iraq', total: 20, cor: '#007A3D', txt: '#ffffff' }, { prefixo: 'NOR', nome: 'Norway', total: 20, cor: '#C8102E', txt: '#ffffff' }] },
-            { id: 'GrupoJ', nome: 'Grupo J', equipes: [{ prefixo: 'ARG', nome: 'Argentina', total: 20, cor: '#43A1D5', txt: '#000000' }, { prefixo: 'ALG', nome: 'Algeria', total: 20, cor: '#006233', txt: '#ffffff' }, { prefixo: 'AUT', nome: 'Austria', total: 20, cor: '#ED2939', txt: '#ffffff' }, { prefixo: 'JOR', nome: 'Jordan', total: 20, cor: '#E30A17', txt: '#ffffff' }] },
-            { id: 'GrupoK', nome: 'Grupo K', equipes: [{ prefixo: 'POR', nome: 'Portugal', total: 20, cor: '#DA291C', txt: '#ffffff' }, { prefixo: 'COD', nome: 'Congo DR', total: 20, cor: '#00AEEF', txt: '#000000' }, { prefixo: 'UZB', nome: 'Uzbekistan', total: 20, cor: '#0099B5', txt: '#ffffff' }, { prefixo: 'COL', nome: 'Colombia', total: 20, cor: '#FCD116', txt: '#000000' }] },
-            { id: 'GrupoL', nome: 'Grupo L', equipes: [{ prefixo: 'ENG', nome: 'England', total: 20, cor: '#CE1126', txt: '#ffffff' }, { prefixo: 'CRO', nome: 'Croatia', total: 20, cor: '#ED1C24', txt: '#ffffff' }, { prefixo: 'GHA', nome: 'Ghana', total: 20, cor: '#FCD116', txt: '#000000' }, { prefixo: 'PAN', nome: 'Panama', total: 20, cor: '#DA291C', txt: '#ffffff' }] },
-            { id: 'Fim', nome: 'História (Museu FIFA)', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup History', start: 9, end: 20, cor: '#c0c0c0', txt: '#000000' }] }
-        ];
+        // ... (resto do array albumData segue o seu original) ...
+        const albumData = [{ id: 'Inicio', nome: 'Início', equipes: [{ prefixo: 'FWC', nome: 'Cidades-Sede', start: 1, end: 8, cor: '#c0c0c0', txt: '#000000' }] }, { id: 'GrupoA', nome: 'Grupo A', equipes: [{ prefixo: 'MEX', nome: 'Mexico', total: 20, cor: '#006341', txt: '#ffffff' }, { prefixo: 'RSA', nome: 'South Africa', total: 20, cor: '#FFB81C', txt: '#000000' }, { prefixo: 'KOR', nome: 'Korea Republic', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'CZE', nome: 'Czechia', total: 20, cor: '#ED1B24', txt: '#ffffff' }] }, { id: 'GrupoB', nome: 'Grupo B', equipes: [{ prefixo: 'CAN', nome: 'Canada', total: 20, cor: '#C5281C', txt: '#ffffff' }, { prefixo: 'BIH', nome: 'Bosnia-Herzegovina', total: 20, cor: '#002F6C', txt: '#ffffff' }, { prefixo: 'QAT', nome: 'Qatar', total: 20, cor: '#8A1538', txt: '#ffffff' }, { prefixo: 'SUI', nome: 'Switzerland', total: 20, cor: '#FF0000', txt: '#ffffff' }] }, { id: 'GrupoC', nome: 'Grupo C', equipes: [{ prefixo: 'BRA', nome: 'Brazil', total: 20, cor: '#FFDC02', txt: '#000000' }, { prefixo: 'MAR', nome: 'Morocco', total: 20, cor: '#C1272D', txt: '#ffffff' }, { prefixo: 'HAI', nome: 'Haiti', total: 20, cor: '#00205B', txt: '#ffffff' }, { prefixo: 'SCO', nome: 'Scotland', total: 20, cor: '#001B49', txt: '#ffffff' }] }, { id: 'GrupoD', nome: 'Grupo D', equipes: [{ prefixo: 'USA', nome: 'USA', total: 20, cor: '#002868', txt: '#ffffff' }, { prefixo: 'PAR', nome: 'Paraguay', total: 20, cor: '#D52B1E', txt: '#ffffff' }, { prefixo: 'AUS', nome: 'Australia', total: 20, cor: '#FFCD00', txt: '#000000' }, { prefixo: 'TUR', nome: 'Türkiye', total: 20, cor: '#E30A17', txt: '#ffffff' }] }, { id: 'GrupoE', nome: 'Grupo E', equipes: [{ prefixo: 'GER', nome: 'Germany', total: 20, cor: '#111111', txt: '#ffffff' }, { prefixo: 'CUW', nome: 'Curaçao', total: 20, cor: '#002776', txt: '#ffffff' }, { prefixo: 'CIV', nome: 'Côte d\'Ivoire', total: 20, cor: '#F77F00', txt: '#000000' }, { prefixo: 'ECU', nome: 'Ecuador', total: 20, cor: '#FFDD00', txt: '#000000' }] }, { id: 'GrupoF', nome: 'Grupo F', equipes: [{ prefixo: 'NED', nome: 'Netherlands', total: 20, cor: '#F36C21', txt: '#ffffff' }, { prefixo: 'JPN', nome: 'Japan', total: 20, cor: '#000555', txt: '#ffffff' }, { prefixo: 'SWE', nome: 'Sweden', total: 20, cor: '#FFF200', txt: '#000000' }, { prefixo: 'TUN', nome: 'Tunisia', total: 20, cor: '#E70013', txt: '#ffffff' }] }, { id: 'GrupoG', nome: 'Grupo G', equipes: [{ prefixo: 'BEL', nome: 'Belgium', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'EGY', nome: 'Egypt', total: 20, cor: '#C8102E', txt: '#ffffff' }, { prefixo: 'IRN', nome: 'IR Iran', total: 20, cor: '#15A05C', txt: '#ffffff' }, { prefixo: 'NZL', nome: 'New Zealand', total: 20, cor: '#111111', txt: '#ffffff' }] }, { id: 'GrupoH', nome: 'Grupo H', equipes: [{ prefixo: 'ESP', nome: 'Spain', total: 20, cor: '#C60B1E', txt: '#ffffff' }, { prefixo: 'CPV', nome: 'Cabo Verde', total: 20, cor: '#003893', txt: '#ffffff' }, { prefixo: 'KSA', nome: 'Saudi Arabia', total: 20, cor: '#006C35', txt: '#ffffff' }, { prefixo: 'URU', nome: 'Uruguai', total: 20, cor: '#5CB4E5', txt: '#000000' }] }, { id: 'GrupoI', nome: 'Grupo I', equipes: [{ prefixo: 'FRA', nome: 'France', total: 20, cor: '#002654', txt: '#ffffff' }, { prefixo: 'SEN', nome: 'Senegal', total: 20, cor: '#00853F', txt: '#ffffff' }, { prefixo: 'IRQ', nome: 'Iraq', total: 20, cor: '#007A3D', txt: '#ffffff' }, { prefixo: 'NOR', nome: 'Norway', total: 20, cor: '#C8102E', txt: '#ffffff' }] }, { id: 'GrupoJ', nome: 'Grupo J', equipes: [{ prefixo: 'ARG', nome: 'Argentina', total: 20, cor: '#43A1D5', txt: '#000000' }, { prefixo: 'ALG', nome: 'Algeria', total: 20, cor: '#006233', txt: '#ffffff' }, { prefixo: 'AUT', nome: 'Austria', total: 20, cor: '#ED2939', txt: '#ffffff' }, { prefixo: 'JOR', nome: 'Jordan', total: 20, cor: '#E30A17', txt: '#ffffff' }] }, { id: 'GrupoK', nome: 'Grupo K', equipes: [{ prefixo: 'POR', nome: 'Portugal', total: 20, cor: '#DA291C', txt: '#ffffff' }, { prefixo: 'COD', nome: 'Congo DR', total: 20, cor: '#00AEEF', txt: '#000000' }, { prefixo: 'UZB', nome: 'Uzbekistan', total: 20, cor: '#0099B5', txt: '#ffffff' }, { prefixo: 'COL', nome: 'Colombia', total: 20, cor: '#FCD116', txt: '#000000' }] }, { id: 'GrupoL', nome: 'Grupo L', equipes: [{ prefixo: 'ENG', nome: 'England', total: 20, cor: '#CE1126', txt: '#ffffff' }, { prefixo: 'CRO', nome: 'Croatia', total: 20, cor: '#ED1C24', txt: '#ffffff' }, { prefixo: 'GHA', nome: 'Ghana', total: 20, cor: '#FCD116', txt: '#000000' }, { prefixo: 'PAN', nome: 'Panama', total: 20, cor: '#DA291C', txt: '#ffffff' }] }, { id: 'Fim', nome: 'História (Museu FIFA)', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup History', start: 9, end: 20, cor: '#c0c0c0', txt: '#000000' }] }];
 
         function isFaltando(id) { const salvo = localStorage.getItem(id); return salvo === null ? true : salvo === 'true'; }
-
         function toggleSticker(id, elemento) {
             const estavaFaltando = isFaltando(id);
             localStorage.setItem(id, (!estavaFaltando).toString());
@@ -105,37 +65,23 @@
         function renderizar() {
             const container = document.getElementById('album-container');
             container.innerHTML = '';
-            
             albumData.forEach(grupo => {
-                const divGrupo = document.createElement('div');
-                divGrupo.className = 'grupo';
+                const divGrupo = document.createElement('div'); divGrupo.className = 'grupo';
                 divGrupo.innerHTML = `<h2 style="color: ${coresGrupos[grupo.id]}; border-bottom-color: ${coresGrupos[grupo.id]}55;">${grupo.nome}</h2>`;
-                
                 grupo.equipes.forEach(equipe => {
-                    const divEquipe = document.createElement('div');
-                    divEquipe.innerHTML = `<div class="selecao-titulo">${equipe.nome}</div>`;
-                    const grid = document.createElement('div');
-                    grid.className = 'figurinhas-grid';
-                    
-                    const inicioNum = equipe.start || 1;
-                    const fimNum = equipe.end || equipe.total;
-
+                    const divEquipe = document.createElement('div'); divEquipe.innerHTML = `<div class="selecao-titulo">${equipe.nome}</div>`;
+                    const grid = document.createElement('div'); grid.className = 'figurinhas-grid';
+                    const inicioNum = equipe.start || 1; const fimNum = equipe.end || equipe.total;
                     for (let i = inicioNum; i <= fimNum; i++) {
-                        const figId = `${equipe.prefixo} ${i}`;
-                        const divFig = document.createElement('div');
-                        divFig.className = 'fig';
-                        divFig.innerHTML = `<span>${equipe.prefixo}</span><span>${i}</span>`;
-                        
+                        const figId = `${equipe.prefixo} ${i}`; const divFig = document.createElement('div');
+                        divFig.className = 'fig'; divFig.innerHTML = `<span>${equipe.prefixo}</span><span>${i}</span>`;
                         divFig.style.setProperty('--cor-camisa', equipe.cor);
                         divFig.style.setProperty('--cor-borda', equipe.cor === '#FFFFFF' ? '#a0aec0' : equipe.cor);
                         divFig.style.setProperty('--cor-texto-faltando', equipe.cor);
                         divFig.style.setProperty('--cor-texto-clara', equipe.txt);
-                        
                         if (isFaltando(figId)) divFig.classList.add('faltando');
 
-                        let timerEspera = null;
-                        let timerAcao = null;
-                        let startX, startY;
+                        let timerEspera = null; let timerAcao = null; let startX, startY;
 
                         const limpaTimers = () => {
                             clearTimeout(timerEspera); clearTimeout(timerAcao);
@@ -148,15 +94,11 @@
                             limpaTimers();
                             let touch = e.touches ? e.touches[0] : e;
                             startX = touch.clientX; startY = touch.clientY;
-                            
                             timerEspera = setTimeout(() => {
                                 divFig.classList.add('highlight-press');
                                 svgRing.style.left = startX + 'px'; svgRing.style.top = startY + 'px'; svgRing.style.opacity = '1';
                                 circleRing.style.transition = 'none'; circleRing.style.strokeDashoffset = '377';
-                                setTimeout(() => {
-                                    circleRing.style.transition = 'stroke-dashoffset 1.5s linear'; circleRing.style.strokeDashoffset = '0';
-                                }, 30);
-                                
+                                setTimeout(() => { circleRing.style.transition = 'stroke-dashoffset 1.5s linear'; circleRing.style.strokeDashoffset = '0'; }, 30);
                                 timerAcao = setTimeout(() => { toggleSticker(figId, divFig); limpaTimers(); }, 1500);
                             }, 300);
                         };
@@ -174,7 +116,6 @@
                         divFig.addEventListener('mouseup', limpaTimers);
                         divFig.addEventListener('mouseleave', limpaTimers);
                         divFig.addEventListener('contextmenu', e => e.preventDefault());
-
                         grid.appendChild(divFig);
                     }
                     divEquipe.appendChild(grid); divGrupo.appendChild(divEquipe);
@@ -182,10 +123,7 @@
                 container.appendChild(divGrupo);
             });
         }
-
         window.onload = renderizar;
-        function partilharLink() { alert("Use a função de exportar original do seu código."); }
-        function limparAlbum() { if(confirm("Zerar?")) { localStorage.clear(); renderizar(); } }
     </script>
 </body>
 </html>
