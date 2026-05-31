@@ -10,7 +10,6 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #cbd5e1; margin: 0; -webkit-tap-highlight-color: transparent; }
         h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Botão de Partilha */
         .sync-container { display: flex; justify-content: center; margin-bottom: 25px; }
         .btn-share { background-color: #25d366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 8px; }
         .btn-share:active { opacity: 0.8; transform: scale(0.95); }
@@ -88,6 +87,7 @@
             'Fim': '#808080'
         };
 
+        // Ordem EXATAMENTE fixa. São 980 figurinhas no total.
         const albumData = [
             { id: 'Inicio', nome: 'Início', equipes: [{ prefixo: 'FWC', nome: 'Cidades-Sede', start: 1, end: 8, cor: '#c0c0c0', txt: '#000000' }] },
             { id: 'GrupoA', nome: 'Grupo A', equipes: [{ prefixo: 'MEX', nome: 'Mexico', total: 20, cor: '#006341', txt: '#ffffff' }, { prefixo: 'RSA', nome: 'South Africa', total: 20, cor: '#FFB81C', txt: '#000000' }, { prefixo: 'KOR', nome: 'Korea Republic', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'CZE', nome: 'Czechia', total: 20, cor: '#ED1B24', txt: '#ffffff' }] },
@@ -105,51 +105,83 @@
             { id: 'Fim', nome: 'História (Museu FIFA)', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup History', start: 9, end: 20, cor: '#c0c0c0', txt: '#000000' }] }
         ];
 
-        const faltantesBase = [
-            "FWC 3", "FWC 6", "ENG 6", "ENG 12", "ENG 14", "ENG 15", "ENG 16", "ENG 19", "ENG 20", "GHA 1", "GHA 3", "GHA 4", "GHA 7", "GHA 8", "CRO 5", "CRO 7", "CRO 8", "CRO 9", "CRO 12", "CRO 14", "CRO 17", "CRO 19", "COL 3", "COL 4", "COL 5", "COL 6", "COL 7", "COL 12", "COL 14", "COL 16", "COL 19", "COL 20", "PAN 3", "PAN 4", "PAN 5", "PAN 7", "PAN 15", "UZB 2", "UZB 19", "UZB 20", "POR 1", "POR 2", "POR 6", "POR 7", "POR 9", "POR 10", "POR 11", "POR 12", "POR 16", "POR 17", "POR 18", "POR 20", "COD 6", "COD 7", "COD 12", "COD 17", "COD 20", "JOR 2", "JOR 6", "JOR 10", "JOR 20", "AUT 3", "AUT 5", "AUT 6", "AUT 7", "AUT 9", "AUT 14", "AUT 18", "KSA 1", "KSA 2", "KSA 5", "KSA 6", "KSA 10", "KSA 11", "URU 16", "FRA 1", "FRA 11", "FRA 13", "FRA 15", "FRA 16", "FRA 17", "SEN 1", "SEN 6", "SEN 10", "SEN 15", "IRQ 5", "IRQ 11", "IRQ 14", "IRQ 16", "IRQ 17", "IRQ 18", "IRQ 20", "NOR 3", "NOR 5", "NOR 8", "NOR 9", "NOR 12", "NOR 17", "ARG 6", "ARG 10", "ARG 15", "ARG 18", "ALG 1", "ALG 4", "ESP 4", "ESP 5", "ESP 8", "ESP 9", "ESP 12", "ESP 20", "EGY 1", "EGY 2", "EGY 3", "EGY 6", "EGY 8", "EGY 10", "EGY 12", "NED 4", "NED 5", "NED 6", "NED 10", "NED 12", "NED 14", "NED 15", "NED 17", "NED 18", "JPN 3", "JPN 4", "JPN 6", "JPN 10", "JPN 12", "JPN 15", "JPN 17", "JPN 18", "SWE 1", "SWE 3", "SWE 6", "TUN 1", "TUN 10", "TUN 19", "BEL 5", "BEL 6", "BEL 8", "BEL 14", "BEL 15", "BEL 16", "BEL 17", "CPV 2", "CPV 4", "CPV 5", "CPV 7", "CPV 8", "CPV 9", "CPV 12", "CPV 13", "CPV 14", "CPV 18", "IRN 1", "IRN 2", "IRN 3", "IRN 5", "IRN 6", "IRN 7", "IRN 9", "IRN 10", "IRN 11", "IRN 14", "IRN 15", "IRN 16", "IRN 20", "NZL 5", "NZL 11", "NZL 12", "NZL 16", "GER 6", "GER 8", "GER 10", "GER 16", "GER 18", "GER 19", "ECU 1", "ECU 2", "ECU 6", "ECU 8", "ECU 13", "ECU 18", "HAI 1", "HAI 8", "HAI 19", "SCO 9", "SCO 14", "SCO 18", "USA 5", "USA 6", "USA 16", "PAR 4", "PAR 6", "PAR 8", "PAR 12", "PAR 19", "AUS 3", "AUS 4", "AUS 7", "AUS 8", "AUS 10", "AUS 11", "AUS 15", "AUS 16", "AUS 18", "AUS 19", "TUR 1", "TUR 10", "TUR 11", "TUR 16", "TUR 18", "CUW 1", "CUW 4", "CUW 5", "CUW 6", "CUW 8", "CUW 10", "CUW 12", "CUW 15", "CUW 17", "CUW 19", "CIV 2", "CIV 6", "CIV 9", "CIV 10", "CIV 13", "CIV 15", "CIV 18", "CIV 19", "MAR 1", "MAR 4", "MAR 5", "MAR 8", "MAR 9", "MAR 17", "MAR 19", "MEX 2", "MEX 8", "MEX 10", "MEX 11", "MEX 12", "MEX 15", "MEX 19", "MEX 20", "RSA 1", "RSA 8", "RSA 15", "RSA 17", "KOR 1", "KOR 2", "KOR 8", "KOR 19", "KOR 20", "CZE 10", "CZE 12", "CZE 14", "CZE 19", "CAN 10", "CAN 17", "BIH 5", "BIH 6", "BIH 10", "QAT 4", "QAT 5", "QAT 6", "QAT 19", "SUI 2", "SUI 4", "SUI 6", "SUI 13", "BRA 2", "BRA 4", "BRA 6", "BRA 15"
-        ];
+        // LÓGICA DE COMPRESSÃO (BITMASK -> HEX) ==========================
+        function exportarParaHex() {
+            let binStr = "";
+            albumData.forEach(grupo => {
+                grupo.equipes.forEach(equipe => {
+                    const inicioNum = equipe.start || 1;
+                    const fimNum = equipe.end || equipe.total;
+                    for (let i = inicioNum; i <= fimNum; i++) {
+                        const figId = `${equipe.prefixo} ${i}`;
+                        // Se for 'false', quer dizer que TEMOS a figurinha. (1 = Tem, 0 = Falta)
+                        const temos = localStorage.getItem(figId) === 'false';
+                        binStr += temos ? '1' : '0';
+                    }
+                });
+            });
 
-        // LÓGICA DE SINCRONIZAÇÃO VIA LINK DIRETO (À Prova de Falhas) ======
-        function partilharLink() {
-            let dados = {};
-            for (let i = 0; i < localStorage.length; i++) {
-                let key = localStorage.key(i);
-                dados[key] = localStorage.getItem(key);
+            // Converte os bits para Hexadecimal (cada 4 bits = 1 letra/número)
+            let hexStr = "";
+            for (let i = 0; i < binStr.length; i += 4) {
+                let chunk = binStr.substring(i, i + 4);
+                while (chunk.length < 4) chunk += '0'; // Garante tamanho
+                hexStr += parseInt(chunk, 2).toString(16);
             }
-            // Transforma os dados numa string codificada
-            let codigo = btoa(JSON.stringify(dados));
-            // Monta o link do próprio GitHub com os dados anexados
-            let url = window.location.origin + window.location.pathname + "?backup=" + encodeURIComponent(codigo);
+            return hexStr;
+        }
+
+        function importarDeHex(hexStr) {
+            let binStr = "";
+            // Converte o Hexadecimal de volta para Bits
+            for (let i = 0; i < hexStr.length; i++) {
+                let bin = parseInt(hexStr[i], 16).toString(2);
+                while (bin.length < 4) bin = '0' + bin;
+                binStr += bin;
+            }
+
+            let index = 0;
+            localStorage.clear(); // Limpa álbum antigo inteiro
             
-            navigator.clipboard.writeText(url).then(() => {
-                alert("✅ Link copiado com sucesso!\n\nCole no WhatsApp e envie para o telemóvel do seu filho. Quando ele abrir, o álbum ficará igual ao seu!");
-            }).catch(() => {
-                prompt("O seu navegador bloqueou a cópia automática. Copie o link abaixo e envie por WhatsApp:", url);
+            albumData.forEach(grupo => {
+                grupo.equipes.forEach(equipe => {
+                    const inicioNum = equipe.start || 1;
+                    const fimNum = equipe.end || equipe.total;
+                    for (let i = inicioNum; i <= fimNum; i++) {
+                        const figId = `${equipe.prefixo} ${i}`;
+                        const bit = binStr[index] || '0';
+                        // Se o bit for 1, ele TEM a figurinha (faltando = false)
+                        localStorage.setItem(figId, (bit === '1') ? 'false' : 'true');
+                        index++;
+                    }
+                });
             });
         }
 
-        // Executa ao carregar a página para ver se alguém enviou um link
+        function partilharLink() {
+            let hexCode = exportarParaHex();
+            let url = window.location.origin + window.location.pathname + "?backup=" + hexCode;
+            
+            navigator.clipboard.writeText(url).then(() => {
+                alert("✅ Link super comprimido copiado com sucesso!\n\nCole no WhatsApp. O link agora é minúsculo!");
+            }).catch(() => {
+                prompt("O seu navegador bloqueou a cópia automática. Copie o link abaixo:", url);
+            });
+        }
+
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const backup = urlParams.get('backup');
             
-            if (backup) {
-                try {
-                    let dados = JSON.parse(atob(decodeURIComponent(backup)));
-                    localStorage.clear(); // Limpa as antigas
-                    for (let key in dados) {
-                        localStorage.setItem(key, dados[key]); // Salva as novas
-                    }
-                    // Limpa a barra de endereços para não ficar confuso
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                    alert("🎉 Sincronização concluída! O seu álbum foi atualizado.");
-                } catch (e) {
-                    alert("❌ Erro: O link que recebeu é inválido ou está incompleto.");
-                }
+            if (backup && backup.match(/^[0-9a-fA-F]+$/)) {
+                importarDeHex(backup);
+                // Limpa o link na barra de cima para ficar bonitinho
+                window.history.replaceState({}, document.title, window.location.pathname);
+                alert("🎉 Sincronização concluída! O álbum foi reconstruído perfeitamente.");
             }
-            renderizar(); // Monta as figurinhas
+            renderizar();
         };
-        // =================================================================
+        // ================================================================
 
         const svgRing = document.getElementById('progress-ring');
         const circleRing = document.getElementById('progress-ring-circle');
@@ -163,10 +195,10 @@
             return `rgb(${Math.round(r * (1 - percent))}, ${Math.round(g * (1 - percent))}, ${Math.round(b * (1 - percent))})`;
         }
 
+        // AGORA É VAZIO POR PADRÃO. Se não tiver no localStorage, "falta" = true.
         function isFaltando(id) {
             const salvo = localStorage.getItem(id);
-            if (salvo !== null) return salvo === 'true'; 
-            return faltantesBase.includes(id); 
+            return salvo === null ? true : salvo === 'true'; 
         }
 
         function toggleSticker(id, elemento) {
@@ -206,6 +238,7 @@
 
         function renderizar() {
             const container = document.getElementById('album-container');
+            container.innerHTML = '';
             
             albumData.forEach(grupo => {
                 const corDoGrupo = coresGrupos[grupo.id];
@@ -312,7 +345,6 @@
                 container.appendChild(divGrupo);
             });
         }
-        // A função renderizar() agora é chamada dentro do window.onload
     </script>
 </body>
 </html>
