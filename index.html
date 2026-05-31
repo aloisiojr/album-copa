@@ -6,93 +6,47 @@
     <title>Álbum de Figurinhas 2026</title>
     <style>
         * { box-sizing: border-box; }
-        
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #cbd5e1; margin: 0; -webkit-tap-highlight-color: transparent; }
         h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        
         .sync-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
-        
-        .btn-base { 
-            padding: 8px 12px; 
-            border-radius: 6px; 
-            font-weight: 600; 
-            font-size: 0.8rem; 
-            cursor: pointer; 
-            transition: opacity 0.2s, transform 0.1s; 
-            display: flex; 
-            align-items: center; 
-            gap: 5px; 
-            border: 1px solid;
-            box-shadow: none;
-        }
+        .btn-base { padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 5px; border: 1px solid; box-shadow: none; }
         .btn-base:active { opacity: 0.8; transform: scale(0.95); }
-
         .btn-share { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
         .btn-clear { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
         .btn-lock { background-color: #f1f5f9; color: #475569; border-color: #cbd5e1; }
-
         .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .grupo h2 { font-size: 1.2rem; margin: 0 0 15px 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        
         .selecao-titulo { font-size: 1rem; color: #475569; margin: 15px 0 10px 0; font-weight: bold; }
-        
         .figurinhas-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        
-        .fig { 
-            aspect-ratio: 1 / 1;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-radius: 6px; font-weight: 800; text-align: center; line-height: 1.1;
-            font-size: clamp(9px, 2.5vw, 13px);
-            cursor: pointer;
-            border: 2px solid var(--cor-borda);
-            user-select: none; -webkit-user-select: none;
-            transition: transform 0.1s ease, filter 0.1s ease, background-color 0.2s ease, opacity 0.2s ease;
-        }
-
+        .fig { aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 6px; font-weight: 800; text-align: center; line-height: 1.1; font-size: clamp(9px, 2.5vw, 13px); cursor: pointer; border: 2px solid var(--cor-borda); user-select: none; -webkit-user-select: none; transition: transform 0.1s ease, filter 0.1s ease, background-color 0.2s ease, opacity 0.2s ease; }
         .fig.highlight-press { transform: scale(0.90); filter: brightness(0.85); }
-
         .fig.faltando { background: #f8fafc; color: var(--cor-texto-faltando); opacity: 0.6; box-shadow: none; }
-
         .fig:not(.faltando) { background: var(--cor-camisa); color: var(--cor-texto-clara); border-color: var(--cor-borda); box-shadow: 0 3px 6px rgba(0,0,0,0.25); opacity: 1; }
-
         #progress-ring { position: fixed; pointer-events: none; transform: translate(-50%, -50%); opacity: 0; z-index: 9999; }
     </style>
 </head>
 <body>
-
     <svg id="progress-ring" width="140" height="140">
         <circle cx="70" cy="70" r="60" stroke="rgba(0,0,0,0.15)" stroke-width="8" fill="none" />
-        <circle id="progress-ring-circle" cx="70" cy="70" r="60" stroke="#3498db" stroke-width="8" fill="none" 
-                stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 70 70)" stroke-linecap="round"/>
+        <circle id="progress-ring-circle" cx="70" cy="70" r="60" stroke="#3498db" stroke-width="8" fill="none" stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 70 70)" stroke-linecap="round"/>
     </svg>
-
     <h1>Meu Álbum 2026</h1>
-    
     <div class="sync-container">
         <button id="btn-lock-toggle" class="btn-base btn-lock" onclick="toggleLock()">🔒 Seguro</button>
         <button class="btn-base btn-share" onclick="partilharLink()">🔗 Compartilhar</button>
         <button class="btn-base btn-clear" onclick="limparAlbum()">🗑️ Zerar</button>
     </div>
-
     <div id="album-container"></div>
-
     <script>
         let isLocked = true;
         const btnLock = document.getElementById('btn-lock-toggle');
-
         function toggleLock() {
             isLocked = !isLocked;
             btnLock.innerHTML = isLocked ? "🔒 Seguro" : "🔓 Rápido";
             btnLock.style.backgroundColor = isLocked ? "#f1f5f9" : "#e0f2fe";
         }
 
-        const coresGrupos = {
-            'Inicio': '#808080', 'GrupoA': '#599b41', 'GrupoB': '#d3222a', 'GrupoC': '#ffcc00', 
-            'GrupoD': '#212869', 'GrupoE': '#ea1b23', 'GrupoF': '#008761', 'GrupoG': '#c7b6d1', 
-            'GrupoH': '#449999', 'GrupoI': '#3a2674', 'GrupoJ': '#f37861', 'GrupoK': '#dc1f26', 'GrupoL': '#b01c20',
-            'Fim': '#808080'
-        };
-
+        const coresGrupos = { 'Inicio': '#808080', 'GrupoA': '#599b41', 'GrupoB': '#d3222a', 'GrupoC': '#ffcc00', 'GrupoD': '#212869', 'GrupoE': '#ea1b23', 'GrupoF': '#008761', 'GrupoG': '#c7b6d1', 'GrupoH': '#449999', 'GrupoI': '#3a2674', 'GrupoJ': '#f37861', 'GrupoK': '#dc1f26', 'GrupoL': '#b01c20', 'Fim': '#808080' };
         const albumData = [
             { id: 'Inicio', nome: 'Início', equipes: [{ prefixo: 'FWC', nome: 'Cidades-Sede', start: 1, end: 8, cor: '#c0c0c0', txt: '#000000' }] },
             { id: 'GrupoA', nome: 'Grupo A', equipes: [{ prefixo: 'MEX', nome: 'Mexico', total: 20, cor: '#006341', txt: '#ffffff' }, { prefixo: 'RSA', nome: 'South Africa', total: 20, cor: '#FFB81C', txt: '#000000' }, { prefixo: 'KOR', nome: 'Korea Republic', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'CZE', nome: 'Czechia', total: 20, cor: '#ED1B24', txt: '#ffffff' }] },
@@ -110,176 +64,75 @@
             { id: 'Fim', nome: 'História (Museu FIFA)', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup History', start: 9, end: 20, cor: '#c0c0c0', txt: '#000000' }] }
         ];
 
-        function exportarCompactado() {
-            let binStr = "";
-            albumData.forEach(grupo => {
-                grupo.equipes.forEach(equipe => {
-                    const inicioNum = equipe.start || 1;
-                    const fimNum = equipe.end || equipe.total;
-                    for (let i = inicioNum; i <= fimNum; i++) {
-                        const figId = `${equipe.prefixo} ${i}`;
-                        const temos = localStorage.getItem(figId) === 'false';
-                        binStr += temos ? '1' : '0';
-                    }
-                });
-            });
-
-            let b64 = "";
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-            for (let i = 0; i < binStr.length; i += 6) {
-                let chunk = binStr.substring(i, i + 6);
-                chunk = chunk.padEnd(6, '0');
-                b64 += chars[parseInt(chunk, 2)];
-            }
-            return b64;
-        }
-
-        function importarCompactado(b64Str) {
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-            let binStr = "";
-            for (let i = 0; i < b64Str.length; i++) {
-                let val = chars.indexOf(b64Str[i]);
-                if (val === -1) continue;
-                binStr += val.toString(2).padStart(6, '0');
-            }
-
-            let index = 0;
-            localStorage.clear(); 
-            
-            albumData.forEach(grupo => {
-                grupo.equipes.forEach(equipe => {
-                    const inicioNum = equipe.start || 1;
-                    const fimNum = equipe.end || equipe.total;
-                    for (let i = inicioNum; i <= fimNum; i++) {
-                        const figId = `${equipe.prefixo} ${i}`;
-                        const bit = binStr[index] || '0';
-                        localStorage.setItem(figId, (bit === '1') ? 'false' : 'true');
-                        index++;
-                    }
-                });
-            });
-            localStorage.setItem('album_limpo', 'true');
-        }
-
-        function partilharLink() {
-            let b64Code = exportarCompactado();
-            let url = window.location.origin + window.location.pathname + "?backup=" + b64Code;
-            navigator.clipboard.writeText(url).then(() => alert("✅ Link copiado!")).catch(() => prompt("Copie o link:", url));
-        }
-
-        function limparAlbum() {
-            if(confirm("⚠️ Tem a certeza que deseja zerar?")) {
-                localStorage.clear();
-                renderizar();
-            }
-        }
-
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const backup = urlParams.get('backup');
-            if (backup && backup.match(/^[A-Za-z0-9\-_]+$/)) {
-                importarCompactado(backup);
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-            renderizar();
-        };
-
-        const svgRing = document.getElementById('progress-ring');
-        const circleRing = document.getElementById('progress-ring-circle');
-
-        function isFaltando(id) {
-            const salvo = localStorage.getItem(id);
-            return salvo === null ? true : salvo === 'true'; 
-        }
-
-        function toggleSticker(id, elemento) {
-            const estavaFaltando = isFaltando(id);
-            const agoraFalta = !estavaFaltando; 
-            localStorage.setItem(id, agoraFalta.toString());
-            if (agoraFalta) elemento.classList.add('faltando');
-            else elemento.classList.remove('faltando');
-            if(navigator.vibrate) navigator.vibrate(50);
-        }
-
-        function iniciarAnimaçãoCronometro(x, y) {
-            svgRing.style.left = x + 'px'; svgRing.style.top = y + 'px'; svgRing.style.opacity = '1';
-            circleRing.style.transition = 'none'; circleRing.style.strokeDashoffset = '377';
-            setTimeout(() => { circleRing.style.transition = 'stroke-dashoffset 1.5s linear'; circleRing.style.strokeDashoffset = '0'; }, 30);
-        }
-
-        function pararProgresso() {
-            circleRing.style.transition = 'none'; circleRing.style.strokeDashoffset = '377'; svgRing.style.opacity = '0'; 
-        }
+        // Funções auxiliares originais mantidas
+        function mixWhite(hex, percent) { let r = parseInt(hex.substring(1, 3), 16), g = parseInt(hex.substring(3, 5), 16), b = parseInt(hex.substring(5, 7), 16); return `rgb(${Math.round(r + (255 - r) * percent)}, ${Math.round(g + (255 - g) * percent)}, ${Math.round(b + (255 - b) * percent)})`; }
+        function mixBlack(hex, percent) { let r = parseInt(hex.substring(1, 3), 16), g = parseInt(hex.substring(3, 5), 16), b = parseInt(hex.substring(5, 7), 16); return `rgb(${Math.round(r * (1 - percent))}, ${Math.round(g * (1 - percent))}, ${Math.round(b * (1 - percent))})`; }
+        function isFaltando(id) { const salvo = localStorage.getItem(id); return salvo === null ? true : salvo === 'true'; }
+        function toggleSticker(id, elemento) { const estavaFaltando = isFaltando(id); localStorage.setItem(id, (!estavaFaltando).toString()); renderizar(); if(navigator.vibrate) navigator.vibrate(50); }
 
         function renderizar() {
             const container = document.getElementById('album-container');
             container.innerHTML = '';
-            
             albumData.forEach(grupo => {
-                const divGrupo = document.createElement('div');
-                divGrupo.className = 'grupo';
-                divGrupo.innerHTML = `<h2 style="color: ${coresGrupos[grupo.id]};">${grupo.nome}</h2>`;
-                
+                const divGrupo = document.createElement('div'); divGrupo.className = 'grupo';
+                divGrupo.innerHTML = `<h2 style="color: ${coresGrupos[grupo.id]}; border-bottom-color: ${coresGrupos[grupo.id]}55;">${grupo.nome}</h2>`;
                 grupo.equipes.forEach(equipe => {
-                    const divEquipe = document.createElement('div');
-                    divEquipe.innerHTML = `<div class="selecao-titulo">${equipe.nome}</div>`;
-                    const grid = document.createElement('div');
-                    grid.className = 'figurinhas-grid';
-                    
-                    const inicioNum = equipe.start || 1;
-                    const fimNum = equipe.end || equipe.total;
-
+                    const divEquipe = document.createElement('div'); divEquipe.innerHTML = `<div class="selecao-titulo">${equipe.nome}</div>`;
+                    const grid = document.createElement('div'); grid.className = 'figurinhas-grid';
+                    const inicioNum = equipe.start || 1; const fimNum = equipe.end || equipe.total;
                     for (let i = inicioNum; i <= fimNum; i++) {
-                        const figId = `${equipe.prefixo} ${i}`;
-                        const divFig = document.createElement('div');
-                        divFig.className = 'fig';
-                        divFig.innerHTML = `<span>${equipe.prefixo}</span><span>${i}</span>`;
+                        const figId = `${equipe.prefixo} ${i}`; const divFig = document.createElement('div');
+                        divFig.className = 'fig'; divFig.innerHTML = `<span>${equipe.prefixo}</span><span>${i}</span>`;
                         
-                        divFig.style.setProperty('--cor-camisa', equipe.cor);
-                        divFig.style.setProperty('--cor-borda', equipe.cor === '#FFFFFF' ? '#a0aec0' : equipe.cor);
+                        // RESTAURAÇÃO DA LÓGICA DE CORES ORIGINAL
+                        let borderC = equipe.cor; let txtFaltando = equipe.cor;
+                        if (equipe.cor.toUpperCase() === '#FFFFFF') { borderC = '#a0aec0'; txtFaltando = '#64748b'; }
+                        let txtTomSobreTom = equipe.txt === '#ffffff' ? mixWhite(equipe.cor, 0.65) : mixBlack(equipe.cor, 0.45);
+                        divFig.style.setProperty('--cor-camisa', equipe.cor); divFig.style.setProperty('--cor-borda', borderC);
+                        divFig.style.setProperty('--cor-texto-faltando', txtFaltando); divFig.style.setProperty('--cor-texto-clara', txtTomSobreTom);
                         
                         if (isFaltando(figId)) divFig.classList.add('faltando');
 
-                        let timerEspera = null;
+                        // Lógica de Eventos Corrigida
+                        let timer; let startX, startY;
                         
-                        const handleInteraction = (e) => {
-                            if (!isLocked) {
-                                toggleSticker(figId, divFig);
-                                return;
-                            }
-                            // Lógica bloqueada (segurar)
+                        const startAction = (e) => {
                             let touch = e.touches ? e.touches[0] : e;
-                            iniciarAnimaçãoCronometro(touch.clientX, touch.clientY);
-                            divFig.classList.add('highlight-press');
+                            startX = touch.clientX; startY = touch.clientY;
+                            if (!isLocked) { toggleSticker(figId, divFig); return; }
                             
-                            timerEspera = setTimeout(() => {
-                                toggleSticker(figId, divFig);
-                                pararProgresso();
-                                divFig.classList.remove('highlight-press');
-                            }, 1500);
+                            timer = setTimeout(() => {
+                                divFig.classList.add('highlight-press');
+                                // Iniciar ring apenas no modo seguro
+                                const svgRing = document.getElementById('progress-ring');
+                                const circleRing = document.getElementById('progress-ring-circle');
+                                svgRing.style.left = startX + 'px'; svgRing.style.top = startY + 'px'; svgRing.style.opacity = '1';
+                                circleRing.style.transition = 'stroke-dashoffset 1.5s linear'; circleRing.style.strokeDashoffset = '0';
+                                
+                                setTimeout(() => { toggleSticker(figId, divFig); divFig.classList.remove('highlight-press'); svgRing.style.opacity = '0'; circleRing.style.strokeDashoffset = '377'; }, 1500);
+                            }, 200); // Delay mínimo para evitar conflito com scroll
                         };
 
-                        const cancelInteraction = () => {
-                            clearTimeout(timerEspera);
-                            pararProgresso();
+                        const endAction = () => {
+                            clearTimeout(timer);
+                            document.getElementById('progress-ring').style.opacity = '0';
+                            document.getElementById('progress-ring-circle').style.strokeDashoffset = '377';
                             divFig.classList.remove('highlight-press');
                         };
 
-                        divFig.addEventListener('touchstart', handleInteraction, {passive: true});
-                        divFig.addEventListener('touchend', cancelInteraction);
-                        divFig.addEventListener('mousedown', handleInteraction);
-                        divFig.addEventListener('mouseup', cancelInteraction);
-                        divFig.addEventListener('mouseleave', cancelInteraction);
-                        divFig.addEventListener('contextmenu', e => e.preventDefault());
-
+                        divFig.addEventListener('touchstart', startAction, {passive: true});
+                        divFig.addEventListener('mousedown', startAction);
+                        divFig.addEventListener('touchend', endAction);
+                        divFig.addEventListener('mouseup', endAction);
+                        divFig.addEventListener('mouseleave', endAction);
                         grid.appendChild(divFig);
                     }
-                    divEquipe.appendChild(grid);
-                    divGrupo.appendChild(divEquipe);
+                    divEquipe.appendChild(grid); divGrupo.appendChild(divEquipe);
                 });
                 container.appendChild(divGrupo);
             });
         }
+        window.onload = renderizar;
     </script>
 </body>
 </html>
