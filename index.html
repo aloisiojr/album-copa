@@ -96,6 +96,75 @@
             if(navigator.vibrate) navigator.vibrate(50);
         }
 
+        const B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+        function exportarCompactado() {
+            let binStr = "";
+            albumData.forEach(grupo => {
+                grupo.equipes.forEach(equipe => {
+                    const inicioNum = equipe.start || 1;
+                    const fimNum = equipe.end || equipe.total;
+                    for (let i = inicioNum; i <= fimNum; i++) {
+                        const figId = `${equipe.prefixo} ${i}`;
+                        const temos = localStorage.getItem(figId) === 'false';
+                        binStr += temos ? '1' : '0';
+                    }
+                });
+            });
+            let b64 = "";
+            for (let i = 0; i < binStr.length; i += 6) {
+                let chunk = binStr.substring(i, i + 6).padEnd(6, '0');
+                b64 += B64_CHARS[parseInt(chunk, 2)];
+            }
+            return b64;
+        }
+        function importarCompactado(b64Str) {
+            let binStr = "";
+            for (let i = 0; i < b64Str.length; i++) {
+                let val = B64_CHARS.indexOf(b64Str[i]);
+                if (val === -1) continue;
+                binStr += val.toString(2).padStart(6, '0');
+            }
+            let index = 0;
+            localStorage.clear();
+            albumData.forEach(grupo => {
+                grupo.equipes.forEach(equipe => {
+                    const inicioNum = equipe.start || 1;
+                    const fimNum = equipe.end || equipe.total;
+                    for (let i = inicioNum; i <= fimNum; i++) {
+                        const figId = `${equipe.prefixo} ${i}`;
+                        const bit = binStr[index] || '0';
+                        localStorage.setItem(figId, (bit === '1') ? 'false' : 'true');
+                        index++;
+                    }
+                });
+            });
+            localStorage.setItem('album_limpo', 'true');
+        }
+        function partilharLink() {
+            const url = window.location.origin + window.location.pathname + "?backup=" + exportarCompactado();
+            navigator.clipboard.writeText(url).then(() => {
+                alert("✅ Link Ultra-Comprimido copiado com sucesso!\n\nCole no WhatsApp. O tamanho do código agora é perfeitamente limpo.");
+            }).catch(() => {
+                prompt("O seu navegador bloqueou a cópia automática. Copie o link abaixo:", url);
+            });
+        }
+        function limparAlbum() {
+            if (!confirm("⚠️ Tem a certeza que deseja zerar todo o seu álbum?")) return;
+            const url = window.location.origin + window.location.pathname + "?backup=" + exportarCompactado();
+            navigator.clipboard.writeText(url).then(() => {
+                localStorage.clear();
+                renderizar();
+                alert("🗑️ Álbum zerado com sucesso!\n\nUm link com o seu backup anterior foi copiado para a área de transferência por segurança.");
+            }).catch(() => {
+                const resp = prompt("Para segurança, guarde este link de backup antes de zerar o álbum:", url);
+                if (resp !== null) {
+                    localStorage.clear();
+                    renderizar();
+                    alert("🗑️ Álbum zerado com sucesso!");
+                }
+            });
+        }
+
         const svgRing = document.getElementById('progress-ring');
         const circleRing = document.getElementById('progress-ring-circle');
 
@@ -163,7 +232,19 @@
                 container.appendChild(divGrupo);
             });
         }
-        window.onload = renderizar;
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const backup = urlParams.get('backup');
+            if (backup && backup.match(/^[A-Za-z0-9\-_]+$/)) {
+                importarCompactado(backup);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                alert("🎉 Sincronização concluída! O álbum foi preenchido perfeitamente.");
+            } else if (localStorage.getItem('album_limpo') !== 'true') {
+                localStorage.clear();
+                localStorage.setItem('album_limpo', 'true');
+            }
+            renderizar();
+        };
     </script>
 </body>
 </html>
