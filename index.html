@@ -82,6 +82,7 @@
                         if (isFaltando(figId)) divFig.classList.add('faltando');
 
                         let timerEspera = null; let timerAcao = null; let startX, startY;
+                        let lastTouchTime = 0;
 
                         const limpaTimers = () => {
                             clearTimeout(timerEspera); clearTimeout(timerAcao);
@@ -90,6 +91,8 @@
                         };
 
                         const onStart = (e) => {
+                            if (e.type === 'mousedown' && Date.now() - lastTouchTime < 500) return;                                                                                                 
+                            if (e.type === 'touchstart') lastTouchTime = Date.now();
                             if (!isLocked) { toggleSticker(figId, divFig); return; }
                             limpaTimers();
                             let touch = e.touches ? e.touches[0] : e;
