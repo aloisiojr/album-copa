@@ -10,9 +10,12 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #cbd5e1; margin: 0; -webkit-tap-highlight-color: transparent; }
         h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
         
-        .sync-container { display: flex; justify-content: center; margin-bottom: 25px; }
-        .btn-share { background-color: #25d366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 8px; }
+        .sync-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .btn-share { background-color: #25d366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 8px; }
         .btn-share:active { opacity: 0.8; transform: scale(0.95); }
+
+        .btn-clear { background-color: #ef4444; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 8px; }
+        .btn-clear:active { opacity: 0.8; transform: scale(0.95); }
 
         .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .grupo h2 { font-size: 1.2rem; margin: 0 0 15px 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
@@ -74,7 +77,8 @@
     <h1>Meu Álbum 2026</h1>
     
     <div class="sync-container">
-        <button class="btn-share" onclick="partilharLink()">📲 Partilhar Álbum (WhatsApp)</button>
+        <button class="btn-share" onclick="partilharLink()">📲 Partilhar (WhatsApp)</button>
+        <button class="btn-clear" onclick="limparAlbum()">🗑️ Limpar Meu Álbum</button>
     </div>
 
     <div id="album-container"></div>
@@ -166,6 +170,27 @@
             }).catch(() => {
                 prompt("O seu navegador bloqueou a cópia automática. Copie o link abaixo:", url);
             });
+        }
+
+        // Nova Função: Limpar Álbum com Backup Seguro
+        function limparAlbum() {
+            if(confirm("⚠️ Tem a certeza que deseja apagar todo o seu progresso neste telemóvel?")) {
+                let b64Code = exportarCompactado();
+                let url = window.location.origin + window.location.pathname + "?backup=" + b64Code;
+                
+                navigator.clipboard.writeText(url).then(() => {
+                    localStorage.clear();
+                    renderizar();
+                    alert("🗑️ Álbum limpo com sucesso!\n\nUm link com o seu backup antigo foi copiado para a área de transferência por segurança.");
+                }).catch(() => {
+                    let resp = prompt("Para segurança, guarde este link de backup antes de limpar o álbum:", url);
+                    if(resp !== null) {
+                        localStorage.clear();
+                        renderizar();
+                        alert("🗑️ Álbum limpo com sucesso!");
+                    }
+                });
+            }
         }
 
         window.onload = function() {
