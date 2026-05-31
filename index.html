@@ -32,7 +32,7 @@
     </svg>
     <h1>Meu Álbum 2026</h1>
     <div class="sync-container">
-        <button id="btn-lock-toggle" class="btn-base btn-lock" onclick="toggleLock()">🔒 Seguro</button>
+        <button id="btn-lock-toggle" class="btn-base btn-lock">🔒 Seguro</button>
         <button class="btn-base btn-share" onclick="partilharLink()">🔗 Compartilhar</button>
         <button class="btn-base btn-clear" onclick="limparAlbum()">🗑️ Zerar</button>
     </div>
@@ -45,6 +45,43 @@
             btnLock.innerHTML = isLocked ? "🔒 Seguro" : "🔓 Rápido";
             btnLock.style.backgroundColor = isLocked ? "#f1f5f9" : "#e0f2fe";
         }
+
+        let lockTimerEspera = null, lockTimerAcao = null, lockStartX, lockStartY, lockLastTouch = 0;
+        function clearLockTimers() {
+            clearTimeout(lockTimerEspera); clearTimeout(lockTimerAcao);
+            const ring = document.getElementById('progress-ring');
+            const circ = document.getElementById('progress-ring-circle');
+            if (ring) ring.style.opacity = '0';
+            if (circ) circ.style.strokeDashoffset = '377';
+        }
+        function onLockStart(e) {
+            if (e.type === 'mousedown' && Date.now() - lockLastTouch < 500) return;
+            if (e.type === 'touchstart') lockLastTouch = Date.now();
+            if (!isLocked) { toggleLock(); return; }
+            clearLockTimers();
+            const touch = e.touches ? e.touches[0] : e;
+            lockStartX = touch.clientX; lockStartY = touch.clientY;
+            lockTimerEspera = setTimeout(() => {
+                const ring = document.getElementById('progress-ring');
+                const circ = document.getElementById('progress-ring-circle');
+                ring.style.left = lockStartX + 'px'; ring.style.top = lockStartY + 'px'; ring.style.opacity = '1';
+                circ.style.transition = 'none'; circ.style.strokeDashoffset = '377';
+                setTimeout(() => { circ.style.transition = 'stroke-dashoffset 1.5s linear'; circ.style.strokeDashoffset = '0'; }, 30);
+                lockTimerAcao = setTimeout(() => { toggleLock(); clearLockTimers(); }, 1500);
+            }, 300);
+        }
+        function onLockMove(e) {
+            const touch = e.touches ? e.touches[0] : e;
+            if (Math.abs(touch.clientX - lockStartX) > 10 || Math.abs(touch.clientY - lockStartY) > 10) clearLockTimers();
+        }
+        btnLock.addEventListener('touchstart', onLockStart, {passive: true});
+        btnLock.addEventListener('touchmove', onLockMove, {passive: true});
+        btnLock.addEventListener('touchend', clearLockTimers);
+        btnLock.addEventListener('mousedown', onLockStart);
+        btnLock.addEventListener('mousemove', onLockMove);
+        btnLock.addEventListener('mouseup', clearLockTimers);
+        btnLock.addEventListener('mouseleave', clearLockTimers);
+        btnLock.addEventListener('contextmenu', e => e.preventDefault());
 
         const coresGrupos = { 'Inicio': '#808080', 'GrupoA': '#599b41', 'GrupoB': '#d3222a', 'GrupoC': '#ffcc00', 'GrupoD': '#212869', 'GrupoE': '#ea1b23', 'GrupoF': '#008761', 'GrupoG': '#c7b6d1', 'GrupoH': '#449999', 'GrupoI': '#3a2674', 'GrupoJ': '#f37861', 'GrupoK': '#dc1f26', 'GrupoL': '#b01c20', 'Fim': '#808080' };
         // ... (resto do array albumData segue o seu original) ...
@@ -91,7 +128,7 @@
                         };
 
                         const onStart = (e) => {
-                            if (e.type === 'mousedown' && Date.now() - lastTouchTime < 500) return;                                                                                                 
+                            if (e.type === 'mousedown' && Date.now() - lastTouchTime < 500) return;
                             if (e.type === 'touchstart') lastTouchTime = Date.now();
                             if (!isLocked) { toggleSticker(figId, divFig); return; }
                             limpaTimers();
