@@ -27,31 +27,28 @@
             transition: transform 0.1s ease, filter 0.1s ease;
         }
 
-        /* Highlight visual enquanto está sendo segurado */
         .fig.highlight-press {
             transform: scale(0.90);
             filter: brightness(0.85);
         }
 
-        /* ESTADO: FALTANDO (Não tenho) -> Fundo Branco */
         .fig.faltando {
             background: #ffffff;
             color: var(--cor-texto-faltando);
         }
 
-        /* ESTADO: ENCONTRADA (Tenho) -> Cor Cheia */
         .fig:not(.faltando) {
             background: var(--cor-camisa);
             color: var(--cor-texto-clara);
             border-color: var(--cor-camisa);
         }
 
-        /* Progresso Circular Animado */
+        /* Mudança aqui: usando opacity em vez de display: none */
         #progress-ring {
             position: fixed;
             pointer-events: none;
             transform: translate(-50%, -50%);
-            display: none;
+            opacity: 0;
             z-index: 9999;
         }
     </style>
@@ -124,27 +121,26 @@
             if(navigator.vibrate) navigator.vibrate(50);
         }
 
+        // Lógica corrigida da animação
         function iniciarAnimaçãoCronometro(x, y) {
             svgRing.style.left = x + 'px';
             svgRing.style.top = y + 'px';
-            svgRing.style.display = 'block';
+            svgRing.style.opacity = '1'; // Mostra o anel
             
-            // Remove a transição para resetar o stroke na hora
             circleRing.style.transition = 'none';
             circleRing.style.strokeDashoffset = '377';
             
-            // Força o navegador a recalcular o layout (necessário para a animação rodar do zero)
-            void svgRing.offsetWidth; 
-            
-            // Adiciona a transição que vai durar 1.5s (completando os 2.0s totais)
-            circleRing.style.transition = 'stroke-dashoffset 1.5s linear';
-            circleRing.style.strokeDashoffset = '0';
+            // Timeout garante que o navegador renderize o "vazio" antes de animar pro "cheio"
+            setTimeout(() => {
+                circleRing.style.transition = 'stroke-dashoffset 1.5s linear';
+                circleRing.style.strokeDashoffset = '0';
+            }, 30);
         }
 
         function pararProgresso() {
             circleRing.style.transition = 'none';
             circleRing.style.strokeDashoffset = '377'; 
-            svgRing.style.display = 'none';
+            svgRing.style.opacity = '0'; // Esconde o anel
         }
 
         function renderizar() {
@@ -188,7 +184,6 @@
                             divFig.classList.add('faltando');
                         }
 
-                        // Lógica de segurar com tolerância a scroll
                         let timerEspera = null;
                         let timerAcao = null;
                         let startX = 0, startY = 0;
@@ -211,12 +206,10 @@
                             startY = touch.clientY;
                             elementoAtivo = divFig;
 
-                            // Espera 0.5s. Se não der scroll, começa a animação
                             timerEspera = setTimeout(() => {
                                 elementoAtivo.classList.add('highlight-press');
                                 iniciarAnimaçãoCronometro(startX, startY);
                                 
-                                // Depois de mais 1.5s (total 2s)
                                 timerAcao = setTimeout(() => {
                                     toggleSticker(figId, elementoAtivo);
                                     limpaTimers();
@@ -230,19 +223,16 @@
                             let touch = e.touches ? e.touches[0] : e;
                             let movX = Math.abs(touch.clientX - startX);
                             let movY = Math.abs(touch.clientY - startY);
-                            // Se arrastar o dedo mais que 10 pixels, é um scroll: aborta a missão!
                             if (movX > 10 || movY > 10) {
                                 limpaTimers();
                             }
                         };
 
-                        // Não usamos {passive: false} pois queremos que o scroll nativo flua solto.
                         divFig.addEventListener('touchstart', onStart, {passive: true});
                         divFig.addEventListener('touchmove', onMove, {passive: true});
                         divFig.addEventListener('touchend', limpaTimers);
                         divFig.addEventListener('touchcancel', limpaTimers);
                         
-                        // Clicks de Mouse (para computador)
                         divFig.addEventListener('mousedown', onStart);
                         divFig.addEventListener('mousemove', onMove);
                         divFig.addEventListener('mouseup', limpaTimers);
