@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -8,13 +8,12 @@
         * { box-sizing: border-box; }
         
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #cbd5e1; margin: 0; -webkit-tap-highlight-color: transparent; }
-        h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
         
-        /* Status e Botão de Nuvem */
-        .cloud-header { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px; }
-        .status-nuvem { font-size: 0.85rem; color: #64748b; font-weight: bold; }
-        .btn-link { background-color: #3b82f6; color: white; padding: 8px 16px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.9rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: opacity 0.2s; }
-        .btn-link:active { opacity: 0.7; }
+        /* Botão de Partilha */
+        .sync-container { display: flex; justify-content: center; margin-bottom: 25px; }
+        .btn-share { background-color: #25d366; color: white; padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 8px; }
+        .btn-share:active { opacity: 0.8; transform: scale(0.95); }
 
         .grupo { margin-bottom: 25px; background: #e2e8f0; padding: 12px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .grupo h2 { font-size: 1.2rem; margin: 0 0 15px 0; border-bottom: 2px solid #cbd5e1; padding-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
@@ -34,8 +33,12 @@
             transition: transform 0.1s ease, filter 0.1s ease, background-color 0.2s ease, opacity 0.2s ease;
         }
 
-        .fig.highlight-press { transform: scale(0.90); filter: brightness(0.85); }
+        .fig.highlight-press {
+            transform: scale(0.90);
+            filter: brightness(0.85);
+        }
 
+        /* ESTADO: FALTANDO (Espaço Vazio) */
         .fig.faltando {
             background: #f8fafc;
             color: var(--cor-texto-faltando);
@@ -43,6 +46,7 @@
             box-shadow: none;
         }
 
+        /* ESTADO: ENCONTRADA (Figurinha Colada) */
         .fig:not(.faltando) {
             background: var(--cor-camisa);
             color: var(--cor-texto-clara);
@@ -51,7 +55,13 @@
             opacity: 1;
         }
 
-        #progress-ring { position: fixed; pointer-events: none; transform: translate(-50%, -50%); opacity: 0; z-index: 9999; }
+        #progress-ring {
+            position: fixed;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
@@ -64,9 +74,8 @@
 
     <h1>Meu Álbum 2026</h1>
     
-    <div class="cloud-header">
-        <div id="cloud-status" class="status-nuvem">⏳ Conectando à nuvem...</div>
-        <button id="btn-share" class="btn-link" onclick="copiarLinkSincronizado()" style="display:none;">🔗 Copiar Link Sincronizado</button>
+    <div class="sync-container">
+        <button class="btn-share" onclick="partilharLink()">📲 Partilhar Álbum (WhatsApp)</button>
     </div>
 
     <div id="album-container"></div>
@@ -96,85 +105,51 @@
             { id: 'Fim', nome: 'História (Museu FIFA)', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup History', start: 9, end: 20, cor: '#c0c0c0', txt: '#000000' }] }
         ];
 
-        // LÓGICA DE NUVEM (JSONBLOB) ==============================================
-        let cloudId = new URLSearchParams(window.location.search).get('sync') || localStorage.getItem('cloudSyncId');
-        const statusEl = document.getElementById('cloud-status');
-        const btnShare = document.getElementById('btn-share');
-        let isSyncing = false;
+        const faltantesBase = [
+            "FWC 3", "FWC 6", "ENG 6", "ENG 12", "ENG 14", "ENG 15", "ENG 16", "ENG 19", "ENG 20", "GHA 1", "GHA 3", "GHA 4", "GHA 7", "GHA 8", "CRO 5", "CRO 7", "CRO 8", "CRO 9", "CRO 12", "CRO 14", "CRO 17", "CRO 19", "COL 3", "COL 4", "COL 5", "COL 6", "COL 7", "COL 12", "COL 14", "COL 16", "COL 19", "COL 20", "PAN 3", "PAN 4", "PAN 5", "PAN 7", "PAN 15", "UZB 2", "UZB 19", "UZB 20", "POR 1", "POR 2", "POR 6", "POR 7", "POR 9", "POR 10", "POR 11", "POR 12", "POR 16", "POR 17", "POR 18", "POR 20", "COD 6", "COD 7", "COD 12", "COD 17", "COD 20", "JOR 2", "JOR 6", "JOR 10", "JOR 20", "AUT 3", "AUT 5", "AUT 6", "AUT 7", "AUT 9", "AUT 14", "AUT 18", "KSA 1", "KSA 2", "KSA 5", "KSA 6", "KSA 10", "KSA 11", "URU 16", "FRA 1", "FRA 11", "FRA 13", "FRA 15", "FRA 16", "FRA 17", "SEN 1", "SEN 6", "SEN 10", "SEN 15", "IRQ 5", "IRQ 11", "IRQ 14", "IRQ 16", "IRQ 17", "IRQ 18", "IRQ 20", "NOR 3", "NOR 5", "NOR 8", "NOR 9", "NOR 12", "NOR 17", "ARG 6", "ARG 10", "ARG 15", "ARG 18", "ALG 1", "ALG 4", "ESP 4", "ESP 5", "ESP 8", "ESP 9", "ESP 12", "ESP 20", "EGY 1", "EGY 2", "EGY 3", "EGY 6", "EGY 8", "EGY 10", "EGY 12", "NED 4", "NED 5", "NED 6", "NED 10", "NED 12", "NED 14", "NED 15", "NED 17", "NED 18", "JPN 3", "JPN 4", "JPN 6", "JPN 10", "JPN 12", "JPN 15", "JPN 17", "JPN 18", "SWE 1", "SWE 3", "SWE 6", "TUN 1", "TUN 10", "TUN 19", "BEL 5", "BEL 6", "BEL 8", "BEL 14", "BEL 15", "BEL 16", "BEL 17", "CPV 2", "CPV 4", "CPV 5", "CPV 7", "CPV 8", "CPV 9", "CPV 12", "CPV 13", "CPV 14", "CPV 18", "IRN 1", "IRN 2", "IRN 3", "IRN 5", "IRN 6", "IRN 7", "IRN 9", "IRN 10", "IRN 11", "IRN 14", "IRN 15", "IRN 16", "IRN 20", "NZL 5", "NZL 11", "NZL 12", "NZL 16", "GER 6", "GER 8", "GER 10", "GER 16", "GER 18", "GER 19", "ECU 1", "ECU 2", "ECU 6", "ECU 8", "ECU 13", "ECU 18", "HAI 1", "HAI 8", "HAI 19", "SCO 9", "SCO 14", "SCO 18", "USA 5", "USA 6", "USA 16", "PAR 4", "PAR 6", "PAR 8", "PAR 12", "PAR 19", "AUS 3", "AUS 4", "AUS 7", "AUS 8", "AUS 10", "AUS 11", "AUS 15", "AUS 16", "AUS 18", "AUS 19", "TUR 1", "TUR 10", "TUR 11", "TUR 16", "TUR 18", "CUW 1", "CUW 4", "CUW 5", "CUW 6", "CUW 8", "CUW 10", "CUW 12", "CUW 15", "CUW 17", "CUW 19", "CIV 2", "CIV 6", "CIV 9", "CIV 10", "CIV 13", "CIV 15", "CIV 18", "CIV 19", "MAR 1", "MAR 4", "MAR 5", "MAR 8", "MAR 9", "MAR 17", "MAR 19", "MEX 2", "MEX 8", "MEX 10", "MEX 11", "MEX 12", "MEX 15", "MEX 19", "MEX 20", "RSA 1", "RSA 8", "RSA 15", "RSA 17", "KOR 1", "KOR 2", "KOR 8", "KOR 19", "KOR 20", "CZE 10", "CZE 12", "CZE 14", "CZE 19", "CAN 10", "CAN 17", "BIH 5", "BIH 6", "BIH 10", "QAT 4", "QAT 5", "QAT 6", "QAT 19", "SUI 2", "SUI 4", "SUI 6", "SUI 13", "BRA 2", "BRA 4", "BRA 6", "BRA 15"
+        ];
 
-        // Pega todos os dados locais
-        function getDadosLocais() {
+        // LÓGICA DE SINCRONIZAÇÃO VIA LINK DIRETO (À Prova de Falhas) ======
+        function partilharLink() {
             let dados = {};
             for (let i = 0; i < localStorage.length; i++) {
                 let key = localStorage.key(i);
-                if(key !== 'cloudSyncId') dados[key] = localStorage.getItem(key);
+                dados[key] = localStorage.getItem(key);
             }
-            return dados;
-        }
-
-        // Inicializa a nuvem
-        async function iniciarNuvem() {
-            try {
-                if (!cloudId) {
-                    // Cria um novo banco de dados na nuvem
-                    const res = await fetch('https://jsonblob.com/api/jsonBlob', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(getDadosLocais())
-                    });
-                    cloudId = res.headers.get('Location').split('/').pop();
-                    localStorage.setItem('cloudSyncId', cloudId);
-                } else {
-                    // Lê o banco de dados existente
-                    localStorage.setItem('cloudSyncId', cloudId); // Salva caso tenha vindo pelo link
-                    const res = await fetch(`https://jsonblob.com/api/jsonBlob/${cloudId}`);
-                    if (res.ok) {
-                        const dadosNuvem = await res.json();
-                        for (let key in dadosNuvem) {
-                            localStorage.setItem(key, dadosNuvem[key]);
-                        }
-                    }
-                }
-                statusEl.innerText = "✅ Sincronizado com a Nuvem";
-                statusEl.style.color = "#10b981";
-                btnShare.style.display = "block";
-            } catch (e) {
-                statusEl.innerText = "❌ Trabalhando Offline (Erro na nuvem)";
-                statusEl.style.color = "#ef4444";
-            }
-            renderizar(); // Renderiza depois que baixou tudo
-        }
-
-        // Salva na nuvem após uma alteração
-        async function salvarNaNuvem() {
-            if (!cloudId || isSyncing) return;
-            isSyncing = true;
-            statusEl.innerText = "⏳ Salvando...";
-            statusEl.style.color = "#f59e0b";
-            try {
-                await fetch(`https://jsonblob.com/api/jsonBlob/${cloudId}`, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(getDadosLocais())
-                });
-                statusEl.innerText = "✅ Sincronizado";
-                statusEl.style.color = "#10b981";
-            } catch (e) {
-                statusEl.innerText = "❌ Erro ao salvar";
-                statusEl.style.color = "#ef4444";
-            }
-            isSyncing = false;
-        }
-
-        function copiarLinkSincronizado() {
-            const url = window.location.origin + window.location.pathname + '?sync=' + cloudId;
+            // Transforma os dados numa string codificada
+            let codigo = btoa(JSON.stringify(dados));
+            // Monta o link do próprio GitHub com os dados anexados
+            let url = window.location.origin + window.location.pathname + "?backup=" + encodeURIComponent(codigo);
+            
             navigator.clipboard.writeText(url).then(() => {
-                alert("✅ Link copiado!\n\nEnvie este link para o seu filho. Quando ele abrir, o celular dele conectará no seu álbum automaticamente.");
+                alert("✅ Link copiado com sucesso!\n\nCole no WhatsApp e envie para o telemóvel do seu filho. Quando ele abrir, o álbum ficará igual ao seu!");
             }).catch(() => {
-                prompt("Copie o link abaixo e envie para seu filho:", url);
+                prompt("O seu navegador bloqueou a cópia automática. Copie o link abaixo e envie por WhatsApp:", url);
             });
         }
-        // =========================================================================
+
+        // Executa ao carregar a página para ver se alguém enviou um link
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const backup = urlParams.get('backup');
+            
+            if (backup) {
+                try {
+                    let dados = JSON.parse(atob(decodeURIComponent(backup)));
+                    localStorage.clear(); // Limpa as antigas
+                    for (let key in dados) {
+                        localStorage.setItem(key, dados[key]); // Salva as novas
+                    }
+                    // Limpa a barra de endereços para não ficar confuso
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    alert("🎉 Sincronização concluída! O seu álbum foi atualizado.");
+                } catch (e) {
+                    alert("❌ Erro: O link que recebeu é inválido ou está incompleto.");
+                }
+            }
+            renderizar(); // Monta as figurinhas
+        };
+        // =================================================================
 
         const svgRing = document.getElementById('progress-ring');
         const circleRing = document.getElementById('progress-ring-circle');
@@ -190,9 +165,8 @@
 
         function isFaltando(id) {
             const salvo = localStorage.getItem(id);
-            // Agora a lista base inteira está vazia por padrão, a nuvem define tudo.
-            // Mas se não tiver nada na nuvem/local, assumimos que 'falta' (true).
-            return salvo === null ? true : salvo === 'true'; 
+            if (salvo !== null) return salvo === 'true'; 
+            return faltantesBase.includes(id); 
         }
 
         function toggleSticker(id, elemento) {
@@ -208,9 +182,6 @@
             }
             
             if(navigator.vibrate) navigator.vibrate(50);
-            
-            // Dispara o salvamento na nuvem no fundo
-            salvarNaNuvem();
         }
 
         function iniciarAnimaçãoCronometro(x, y) {
@@ -235,7 +206,6 @@
 
         function renderizar() {
             const container = document.getElementById('album-container');
-            container.innerHTML = ''; // Limpa antes de renderizar
             
             albumData.forEach(grupo => {
                 const corDoGrupo = coresGrupos[grupo.id];
@@ -342,10 +312,7 @@
                 container.appendChild(divGrupo);
             });
         }
-
-        // Inicia buscando da nuvem, depois desenha o app
-        iniciarNuvem();
-
+        // A função renderizar() agora é chamada dentro do window.onload
     </script>
 </body>
 </html>
