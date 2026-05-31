@@ -14,12 +14,7 @@
         
         .selecao-titulo { font-size: 1rem; color: #666; margin: 15px 0 10px 0; font-weight: bold; }
         
-        /* Grid garantindo sempre 5 por linha */
-        .figurinhas-grid { 
-            display: grid; 
-            grid-template-columns: repeat(5, 1fr); 
-            gap: 6px; 
-        }
+        .figurinhas-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
         
         .fig { 
             aspect-ratio: 1 / 1;
@@ -27,31 +22,25 @@
             border-radius: 6px; font-weight: 800; text-align: center; line-height: 1.1;
             font-size: clamp(9px, 2.5vw, 13px);
             cursor: pointer;
-            border: 2px solid var(--cor-camisa);
+            border: 2px solid var(--cor-borda);
             -webkit-touch-callout: none;
             transition: all 0.2s ease;
         }
 
-        /* Estado "Encontrada" (Fundo branco, texto colorido, transparente) */
-        .fig.encontrada {
+        /* ESTADO: FALTANDO (Não tenho) -> Fundo Branco */
+        .fig.faltando {
             background: #ffffff;
-            color: var(--cor-camisa);
-            opacity: 0.4;
+            color: var(--cor-texto-faltando);
         }
 
-        /* Estado "Faltando" (Cor da camisa sólida) */
-        .fig:not(.encontrada) {
+        /* ESTADO: ENCONTRADA (Tenho) -> Cor Cheia */
+        .fig:not(.faltando) {
             background: var(--cor-camisa);
-            color: var(--cor-texto);
-            opacity: 1;
-        }
-        
-        /* Para camisas brancas, forçar a borda e cor do texto */
-        .fig.camisa-branca:not(.encontrada) {
-            border: 2px solid #ccc;
+            color: var(--cor-texto-clara);
+            border-color: var(--cor-camisa);
         }
 
-        /* Progresso Circular */
+        /* Progresso Circular Animado */
         #progress-ring {
             position: fixed;
             pointer-events: none;
@@ -63,81 +52,84 @@
 </head>
 <body>
 
-    <!-- SVG do Anel de Progresso que seguirá o dedo -->
-    <svg id="progress-ring" width="100" height="100">
-        <circle cx="50" cy="50" r="40" stroke="rgba(0,0,0,0.15)" stroke-width="8" fill="none" />
-        <circle id="progress-ring-circle" cx="50" cy="50" r="40" stroke="#3498db" stroke-width="8" fill="none" 
-                stroke-dasharray="251" stroke-dashoffset="251" transform="rotate(-90 50 50)" />
+    <!-- SVG do Anel de Progresso - Aumentado em +50% (Raio 60) -->
+    <svg id="progress-ring" width="140" height="140">
+        <circle cx="70" cy="70" r="60" stroke="rgba(0,0,0,0.15)" stroke-width="8" fill="none" />
+        <circle id="progress-ring-circle" cx="70" cy="70" r="60" stroke="#3498db" stroke-width="8" fill="none" 
+                stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 70 70)" />
     </svg>
 
     <h1>Meu Álbum 2026</h1>
     <div id="album-container"></div>
 
     <script>
-        // Dados de Cores dos Grupos (Faixas do Álbum)
         const coresGrupos = {
             'Inicio': '#808080', 'GrupoA': '#599b41', 'GrupoB': '#d3222a', 'GrupoC': '#ffcc00', 
             'GrupoD': '#212869', 'GrupoE': '#ea1b23', 'GrupoF': '#008761', 'GrupoG': '#c7b6d1', 
             'GrupoH': '#449999', 'GrupoI': '#3a2674', 'GrupoJ': '#f37861', 'GrupoK': '#dc1f26', 'GrupoL': '#b01c20'
         };
 
-        // Estrutura com Cores das Camisas Titulares
-        // cor = cor de fundo | txt = cor da fonte
+        // Estrutura do Álbum: Nomes Oficiais + Cores
         const albumData = [
             { id: 'Inicio', nome: 'Início', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup', total: 20, cor: '#c0c0c0', txt: '#000000' }] },
-            { id: 'GrupoA', nome: 'Grupo A', equipes: [{ prefixo: 'MEX', nome: 'México', total: 20, cor: '#006341', txt: '#ffffff' }, { prefixo: 'RSA', nome: 'África do Sul', total: 20, cor: '#FFB81C', txt: '#000000' }, { prefixo: 'KOR', nome: 'Coreia do Sul', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'CZE', nome: 'Chéquia', total: 20, cor: '#ED1B24', txt: '#ffffff' }] },
-            { id: 'GrupoB', nome: 'Grupo B', equipes: [{ prefixo: 'CAN', nome: 'Canadá', total: 20, cor: '#C5281C', txt: '#ffffff' }, { prefixo: 'BIH', nome: 'Bósnia', total: 20, cor: '#002F6C', txt: '#ffffff' }, { prefixo: 'QAT', nome: 'Catar', total: 20, cor: '#8A1538', txt: '#ffffff' }, { prefixo: 'SUI', nome: 'Suíça', total: 20, cor: '#FF0000', txt: '#ffffff' }] },
-            { id: 'GrupoC', nome: 'Grupo C', equipes: [{ prefixo: 'BRA', nome: 'Brasil', total: 20, cor: '#FFDC02', txt: '#000000' }, { prefixo: 'MAR', nome: 'Marrocos', total: 20, cor: '#C1272D', txt: '#ffffff' }, { prefixo: 'HAI', nome: 'Haiti', total: 20, cor: '#00205B', txt: '#ffffff' }, { prefixo: 'SCO', nome: 'Escócia', total: 20, cor: '#001B49', txt: '#ffffff' }] },
-            { id: 'GrupoD', nome: 'Grupo D', equipes: [{ prefixo: 'USA', nome: 'EUA', total: 20, cor: '#FFFFFF', txt: '#002868' }, { prefixo: 'PAR', nome: 'Paraguai', total: 20, cor: '#D52B1E', txt: '#ffffff' }, { prefixo: 'AUS', nome: 'Austrália', total: 20, cor: '#FFCD00', txt: '#000000' }, { prefixo: 'TUR', nome: 'Turquia', total: 20, cor: '#E30A17', txt: '#ffffff' }] },
-            { id: 'GrupoE', nome: 'Grupo E', equipes: [{ prefixo: 'GER', nome: 'Alemanha', total: 20, cor: '#FFFFFF', txt: '#000000' }, { prefixo: 'CUW', nome: 'Curaçao', total: 20, cor: '#002776', txt: '#ffffff' }, { prefixo: 'CIV', nome: 'Costa do Marfim', total: 20, cor: '#F77F00', txt: '#000000' }, { prefixo: 'ECU', nome: 'Equador', total: 20, cor: '#FFDD00', txt: '#000000' }] },
-            { id: 'GrupoF', nome: 'Grupo F', equipes: [{ prefixo: 'NED', nome: 'Países Baixos', total: 20, cor: '#F36C21', txt: '#ffffff' }, { prefixo: 'JPN', nome: 'Japão', total: 20, cor: '#000555', txt: '#ffffff' }, { prefixo: 'SWE', nome: 'Suécia', total: 20, cor: '#FFF200', txt: '#000000' }, { prefixo: 'TUN', nome: 'Tunísia', total: 20, cor: '#E70013', txt: '#ffffff' }] },
-            { id: 'GrupoG', nome: 'Grupo G', equipes: [{ prefixo: 'BEL', nome: 'Bélgica', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'EGY', nome: 'Egito', total: 20, cor: '#C8102E', txt: '#ffffff' }, { prefixo: 'IRN', nome: 'Irã', total: 20, cor: '#FFFFFF', txt: '#15A05C' }, { prefixo: 'NZL', nome: 'Nova Zelândia', total: 20, cor: '#FFFFFF', txt: '#000000' }] },
-            { id: 'GrupoH', nome: 'Grupo H', equipes: [{ prefixo: 'ESP', nome: 'Espanha', total: 20, cor: '#C60B1E', txt: '#ffffff' }, { prefixo: 'CPV', nome: 'Cabo Verde', total: 20, cor: '#003893', txt: '#ffffff' }, { prefixo: 'KSA', nome: 'Arábia Saudita', total: 20, cor: '#006C35', txt: '#ffffff' }, { prefixo: 'URU', nome: 'Uruguai', total: 20, cor: '#5CB4E5', txt: '#000000' }] },
-            { id: 'GrupoI', nome: 'Grupo I', equipes: [{ prefixo: 'FRA', nome: 'França', total: 20, cor: '#002654', txt: '#ffffff' }, { prefixo: 'SEN', nome: 'Senegal', total: 20, cor: '#FFFFFF', txt: '#00853F' }, { prefixo: 'IRQ', nome: 'Iraque', total: 20, cor: '#007A3D', txt: '#ffffff' }, { prefixo: 'NOR', nome: 'Noruega', total: 20, cor: '#C8102E', txt: '#ffffff' }] },
-            { id: 'GrupoJ', nome: 'Grupo J', equipes: [{ prefixo: 'ARG', nome: 'Argentina', total: 20, cor: '#43A1D5', txt: '#000000' }, { prefixo: 'ALG', nome: 'Argélia', total: 20, cor: '#FFFFFF', txt: '#006233' }, { prefixo: 'AUT', nome: 'Áustria', total: 20, cor: '#ED2939', txt: '#ffffff' }, { prefixo: 'JOR', nome: 'Jordânia', total: 20, cor: '#FFFFFF', txt: '#E30A17' }] },
-            { id: 'GrupoK', nome: 'Grupo K', equipes: [{ prefixo: 'POR', nome: 'Portugal', total: 20, cor: '#DA291C', txt: '#ffffff' }, { prefixo: 'COD', nome: 'Congo DR', total: 20, cor: '#00AEEF', txt: '#000000' }, { prefixo: 'UZB', nome: 'Uzbequistão', total: 20, cor: '#0099B5', txt: '#ffffff' }, { prefixo: 'COL', nome: 'Colômbia', total: 20, cor: '#FCD116', txt: '#000000' }] },
-            { id: 'GrupoL', nome: 'Grupo L', equipes: [{ prefixo: 'ENG', nome: 'Inglaterra', total: 20, cor: '#FFFFFF', txt: '#000000' }, { prefixo: 'CRO', nome: 'Croácia', total: 20, cor: '#ED1C24', txt: '#ffffff' }, { prefixo: 'GHA', nome: 'Gana', total: 20, cor: '#FFFFFF', txt: '#000000' }, { prefixo: 'PAN', nome: 'Panamá', total: 20, cor: '#DA291C', txt: '#ffffff' }] }
+            { id: 'GrupoA', nome: 'Grupo A', equipes: [{ prefixo: 'MEX', nome: 'Mexico', total: 20, cor: '#006341', txt: '#ffffff' }, { prefixo: 'RSA', nome: 'South Africa', total: 20, cor: '#FFB81C', txt: '#000000' }, { prefixo: 'KOR', nome: 'Korea Republic', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'CZE', nome: 'Czechia', total: 20, cor: '#ED1B24', txt: '#ffffff' }] },
+            { id: 'GrupoB', nome: 'Grupo B', equipes: [{ prefixo: 'CAN', nome: 'Canada', total: 20, cor: '#C5281C', txt: '#ffffff' }, { prefixo: 'BIH', nome: 'Bosnia-Herzegovina', total: 20, cor: '#002F6C', txt: '#ffffff' }, { prefixo: 'QAT', nome: 'Qatar', total: 20, cor: '#8A1538', txt: '#ffffff' }, { prefixo: 'SUI', nome: 'Switzerland', total: 20, cor: '#FF0000', txt: '#ffffff' }] },
+            { id: 'GrupoC', nome: 'Grupo C', equipes: [{ prefixo: 'BRA', nome: 'Brazil', total: 20, cor: '#FFDC02', txt: '#000000' }, { prefixo: 'MAR', nome: 'Morocco', total: 20, cor: '#C1272D', txt: '#ffffff' }, { prefixo: 'HAI', nome: 'Haiti', total: 20, cor: '#00205B', txt: '#ffffff' }, { prefixo: 'SCO', nome: 'Scotland', total: 20, cor: '#001B49', txt: '#ffffff' }] },
+            { id: 'GrupoD', nome: 'Grupo D', equipes: [{ prefixo: 'USA', nome: 'USA', total: 20, cor: '#FFFFFF', txt: '#002868' }, { prefixo: 'PAR', nome: 'Paraguay', total: 20, cor: '#D52B1E', txt: '#ffffff' }, { prefixo: 'AUS', nome: 'Australia', total: 20, cor: '#FFCD00', txt: '#000000' }, { prefixo: 'TUR', nome: 'Türkiye', total: 20, cor: '#E30A17', txt: '#ffffff' }] },
+            { id: 'GrupoE', nome: 'Grupo E', equipes: [{ prefixo: 'GER', nome: 'Germany', total: 20, cor: '#FFFFFF', txt: '#000000' }, { prefixo: 'CUW', nome: 'Curaçao', total: 20, cor: '#002776', txt: '#ffffff' }, { prefixo: 'CIV', nome: 'Côte d\'Ivoire', total: 20, cor: '#F77F00', txt: '#000000' }, { prefixo: 'ECU', nome: 'Ecuador', total: 20, cor: '#FFDD00', txt: '#000000' }] },
+            { id: 'GrupoF', nome: 'Grupo F', equipes: [{ prefixo: 'NED', nome: 'Netherlands', total: 20, cor: '#F36C21', txt: '#ffffff' }, { prefixo: 'JPN', nome: 'Japan', total: 20, cor: '#000555', txt: '#ffffff' }, { prefixo: 'SWE', nome: 'Sweden', total: 20, cor: '#FFF200', txt: '#000000' }, { prefixo: 'TUN', nome: 'Tunisia', total: 20, cor: '#E70013', txt: '#ffffff' }] },
+            { id: 'GrupoG', nome: 'Grupo G', equipes: [{ prefixo: 'BEL', nome: 'Belgium', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'EGY', nome: 'Egypt', total: 20, cor: '#C8102E', txt: '#ffffff' }, { prefixo: 'IRN', nome: 'IR Iran', total: 20, cor: '#FFFFFF', txt: '#15A05C' }, { prefixo: 'NZL', nome: 'New Zealand', total: 20, cor: '#FFFFFF', txt: '#000000' }] },
+            { id: 'GrupoH', nome: 'Grupo H', equipes: [{ prefixo: 'ESP', nome: 'Spain', total: 20, cor: '#C60B1E', txt: '#ffffff' }, { prefixo: 'CPV', nome: 'Cabo Verde', total: 20, cor: '#003893', txt: '#ffffff' }, { prefixo: 'KSA', nome: 'Saudi Arabia', total: 20, cor: '#006C35', txt: '#ffffff' }, { prefixo: 'URU', nome: 'Uruguai', total: 20, cor: '#5CB4E5', txt: '#000000' }] },
+            { id: 'GrupoI', nome: 'Grupo I', equipes: [{ prefixo: 'FRA', nome: 'France', total: 20, cor: '#002654', txt: '#ffffff' }, { prefixo: 'SEN', nome: 'Senegal', total: 20, cor: '#FFFFFF', txt: '#00853F' }, { prefixo: 'IRQ', nome: 'Iraq', total: 20, cor: '#007A3D', txt: '#ffffff' }, { prefixo: 'NOR', nome: 'Norway', total: 20, cor: '#C8102E', txt: '#ffffff' }] },
+            { id: 'GrupoJ', nome: 'Grupo J', equipes: [{ prefixo: 'ARG', nome: 'Argentina', total: 20, cor: '#43A1D5', txt: '#000000' }, { prefixo: 'ALG', nome: 'Algeria', total: 20, cor: '#FFFFFF', txt: '#006233' }, { prefixo: 'AUT', nome: 'Austria', total: 20, cor: '#ED2939', txt: '#ffffff' }, { prefixo: 'JOR', nome: 'Jordan', total: 20, cor: '#FFFFFF', txt: '#E30A17' }] },
+            { id: 'GrupoK', nome: 'Grupo K', equipes: [{ prefixo: 'POR', nome: 'Portugal', total: 20, cor: '#DA291C', txt: '#ffffff' }, { prefixo: 'COD', nome: 'Congo DR', total: 20, cor: '#00AEEF', txt: '#000000' }, { prefixo: 'UZB', nome: 'Uzbekistan', total: 20, cor: '#0099B5', txt: '#ffffff' }, { prefixo: 'COL', nome: 'Colombia', total: 20, cor: '#FCD116', txt: '#000000' }] },
+            { id: 'GrupoL', nome: 'Grupo L', equipes: [{ prefixo: 'ENG', nome: 'England', total: 20, cor: '#FFFFFF', txt: '#000000' }, { prefixo: 'CRO', nome: 'Croatia', total: 20, cor: '#ED1C24', txt: '#ffffff' }, { prefixo: 'GHA', nome: 'Ghana', total: 20, cor: '#FFFFFF', txt: '#000000' }, { prefixo: 'PAN', nome: 'Panama', total: 20, cor: '#DA291C', txt: '#ffffff' }] }
         ];
 
-        // Nossa lista de figurinhas FALTANTES
+        // Lista Inicial de Faltantes
         const faltantesBase = [
             "FWC 3", "FWC 6", "ENG 6", "ENG 12", "ENG 14", "ENG 15", "ENG 16", "ENG 19", "ENG 20", "GHA 1", "GHA 3", "GHA 4", "GHA 7", "GHA 8", "CRO 5", "CRO 7", "CRO 8", "CRO 9", "CRO 12", "CRO 14", "CRO 17", "CRO 19", "COL 3", "COL 4", "COL 5", "COL 6", "COL 7", "COL 12", "COL 14", "COL 16", "COL 19", "COL 20", "PAN 3", "PAN 4", "PAN 5", "PAN 7", "PAN 15", "UZB 2", "UZB 19", "UZB 20", "POR 1", "POR 2", "POR 6", "POR 7", "POR 9", "POR 10", "POR 11", "POR 12", "POR 16", "POR 17", "POR 18", "POR 20", "COD 6", "COD 7", "COD 12", "COD 17", "COD 20", "JOR 2", "JOR 6", "JOR 10", "JOR 20", "AUT 3", "AUT 5", "AUT 6", "AUT 7", "AUT 9", "AUT 14", "AUT 18", "KSA 1", "KSA 2", "KSA 5", "KSA 6", "KSA 10", "KSA 11", "URU 16", "FRA 1", "FRA 11", "FRA 13", "FRA 15", "FRA 16", "FRA 17", "SEN 1", "SEN 6", "SEN 10", "SEN 15", "IRQ 5", "IRQ 11", "IRQ 14", "IRQ 16", "IRQ 17", "IRQ 18", "IRQ 20", "NOR 3", "NOR 5", "NOR 8", "NOR 9", "NOR 12", "NOR 17", "ARG 6", "ARG 10", "ARG 15", "ARG 18", "ALG 1", "ALG 4", "ESP 4", "ESP 5", "ESP 8", "ESP 9", "ESP 12", "ESP 20", "EGY 1", "EGY 2", "EGY 3", "EGY 6", "EGY 8", "EGY 10", "EGY 12", "NED 4", "NED 5", "NED 6", "NED 10", "NED 12", "NED 14", "NED 15", "NED 17", "NED 18", "JPN 3", "JPN 4", "JPN 6", "JPN 10", "JPN 12", "JPN 15", "JPN 17", "JPN 18", "SWE 1", "SWE 3", "SWE 6", "TUN 1", "TUN 10", "TUN 19", "BEL 5", "BEL 6", "BEL 8", "BEL 14", "BEL 15", "BEL 16", "BEL 17", "CPV 2", "CPV 4", "CPV 5", "CPV 7", "CPV 8", "CPV 9", "CPV 12", "CPV 13", "CPV 14", "CPV 18", "IRN 1", "IRN 2", "IRN 3", "IRN 5", "IRN 6", "IRN 7", "IRN 9", "IRN 10", "IRN 11", "IRN 14", "IRN 15", "IRN 16", "IRN 20", "NZL 5", "NZL 11", "NZL 12", "NZL 16", "GER 6", "GER 8", "GER 10", "GER 16", "GER 18", "GER 19", "ECU 1", "ECU 2", "ECU 6", "ECU 8", "ECU 13", "ECU 18", "HAI 1", "HAI 8", "HAI 19", "SCO 9", "SCO 14", "SCO 18", "USA 5", "USA 6", "USA 16", "PAR 4", "PAR 6", "PAR 8", "PAR 12", "PAR 19", "AUS 3", "AUS 4", "AUS 7", "AUS 8", "AUS 10", "AUS 11", "AUS 15", "AUS 16", "AUS 18", "AUS 19", "TUR 1", "TUR 10", "TUR 11", "TUR 16", "TUR 18", "CUW 1", "CUW 4", "CUW 5", "CUW 6", "CUW 8", "CUW 10", "CUW 12", "CUW 15", "CUW 17", "CUW 19", "CIV 2", "CIV 6", "CIV 9", "CIV 10", "CIV 13", "CIV 15", "CIV 18", "CIV 19", "MAR 1", "MAR 4", "MAR 5", "MAR 8", "MAR 9", "MAR 17", "MAR 19", "MEX 2", "MEX 8", "MEX 10", "MEX 11", "MEX 12", "MEX 15", "MEX 19", "MEX 20", "RSA 1", "RSA 8", "RSA 15", "RSA 17", "KOR 1", "KOR 2", "KOR 8", "KOR 19", "KOR 20", "CZE 10", "CZE 12", "CZE 14", "CZE 19", "CAN 10", "CAN 17", "BIH 5", "BIH 6", "BIH 10", "QAT 4", "QAT 5", "QAT 6", "QAT 19", "SUI 2", "SUI 4", "SUI 6", "SUI 13", "BRA 2", "BRA 4", "BRA 6", "BRA 15"
         ];
 
         let timer;
-        const duracaoHold = 2000; // 2 segundos
+        const duracaoHold = 2000;
         const svgRing = document.getElementById('progress-ring');
         const circleRing = document.getElementById('progress-ring-circle');
 
-        // Função para checar o status salvando/lendo
-        function isFaltando(id) {
-            const salvo = localStorage.getItem(id);
-            if (salvo !== null) return salvo === 'true'; // Leitura do LocalStorage (tem prioridade)
-            return faltantesBase.includes(id); // Se não houver save, puxa do padrão
+        // Funções para calcular Tom sobre Tom (Clareia/Escurece o fundo nativamente)
+        function mixWhite(hex, percent) {
+            let r = parseInt(hex.substring(1, 3), 16), g = parseInt(hex.substring(3, 5), 16), b = parseInt(hex.substring(5, 7), 16);
+            return `rgb(${Math.round(r + (255 - r) * percent)}, ${Math.round(g + (255 - g) * percent)}, ${Math.round(b + (255 - b) * percent)})`;
+        }
+        function mixBlack(hex, percent) {
+            let r = parseInt(hex.substring(1, 3), 16), g = parseInt(hex.substring(3, 5), 16), b = parseInt(hex.substring(5, 7), 16);
+            return `rgb(${Math.round(r * (1 - percent))}, ${Math.round(g * (1 - percent))}, ${Math.round(b * (1 - percent))})`;
         }
 
-        // Função para inverter a figurinha
+        function isFaltando(id) {
+            const salvo = localStorage.getItem(id);
+            if (salvo !== null) return salvo === 'true'; 
+            return faltantesBase.includes(id); 
+        }
+
         function toggleSticker(id, elemento) {
             const atualFaltando = isFaltando(id);
             localStorage.setItem(id, (!atualFaltando).toString());
             
             if (!atualFaltando) {
-                elemento.classList.remove('encontrada');
+                elemento.classList.remove('faltando');
             } else {
-                elemento.classList.add('encontrada');
+                elemento.classList.add('faltando');
             }
-            if(navigator.vibrate) navigator.vibrate(50); // Feedback vibratório no celular
+            if(navigator.vibrate) navigator.vibrate(50);
         }
 
-        // Animação Circular
+        // Animação Cronômetro
         function iniciarProgresso(x, y) {
             svgRing.style.left = x + 'px';
             svgRing.style.top = y + 'px';
             svgRing.style.display = 'block';
-            
-            // Força o navegador a reiniciar a animação
-            void svgRing.offsetWidth; 
-            
+            void svgRing.offsetWidth; // Reflow
             circleRing.style.transition = 'stroke-dashoffset 2s linear';
             circleRing.style.strokeDashoffset = '0';
         }
@@ -145,11 +137,10 @@
         function pararProgresso() {
             clearTimeout(timer);
             circleRing.style.transition = 'none';
-            circleRing.style.strokeDashoffset = '251'; // Circunferência do anel
+            circleRing.style.strokeDashoffset = '377'; 
             svgRing.style.display = 'none';
         }
 
-        // Construir o HTML
         function renderizar() {
             const container = document.getElementById('album-container');
             
@@ -171,28 +162,35 @@
                         const divFig = document.createElement('div');
                         
                         divFig.className = 'fig';
-                        if (equipe.cor === '#FFFFFF') divFig.classList.add('camisa-branca');
-                        
-                        // Separar Sigla e Número por linha
                         divFig.innerHTML = `<span>${equipe.prefixo}</span><span>${i}</span>`;
                         
-                        // Definir cores nativas via CSS variables
-                        divFig.style.setProperty('--cor-camisa', equipe.cor);
-                        divFig.style.setProperty('--cor-texto', equipe.txt);
+                        // Determinar a cor da borda e texto quando falta
+                        let borderC = equipe.cor;
+                        let txtFaltando = equipe.cor;
+                        if (equipe.cor.toUpperCase() === '#FFFFFF') {
+                            borderC = '#cccccc';
+                            txtFaltando = '#555555';
+                        }
                         
-                        // Estado inicial
-                        if (!isFaltando(figId)) {
-                            divFig.classList.add('encontrada');
+                        // Gerar tom sobre tom: se texto original for branco clareia o fundo; se for preto (ex: Brasil), escurece.
+                        let txtTomSobreTom = equipe.txt === '#ffffff' ? mixWhite(equipe.cor, 0.65) : mixBlack(equipe.cor, 0.45);
+
+                        divFig.style.setProperty('--cor-camisa', equipe.cor);
+                        divFig.style.setProperty('--cor-borda', borderC);
+                        divFig.style.setProperty('--cor-texto-faltando', txtFaltando);
+                        divFig.style.setProperty('--cor-texto-clara', txtTomSobreTom);
+                        
+                        if (isFaltando(figId)) {
+                            divFig.classList.add('faltando');
                         }
 
-                        // Lógica de Segurar o Clique / Toque
+                        // Lógica de Segurar o Clique/Toque
                         const processaToque = (e) => {
                             e.preventDefault();
                             let x = e.touches ? e.touches[0].clientX : e.clientX;
                             let y = e.touches ? e.touches[0].clientY : e.clientY;
                             
                             iniciarProgresso(x, y);
-
                             timer = setTimeout(() => {
                                 toggleSticker(figId, divFig);
                                 pararProgresso();
