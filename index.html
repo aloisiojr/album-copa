@@ -23,6 +23,9 @@
         .fig.faltando { background: #f8fafc; color: var(--cor-texto-faltando); opacity: 0.6; box-shadow: none; }
         .fig:not(.faltando) { background: var(--cor-camisa); color: var(--cor-texto-clara); border-color: var(--cor-borda); box-shadow: 0 3px 6px rgba(0,0,0,0.25); opacity: 1; }
         #progress-ring { position: fixed; pointer-events: none; transform: translate(-50%, -50%); opacity: 0; z-index: 9999; }
+        .busca-container { position: sticky; top: 0; background: #cbd5e1; padding: 8px 10px 12px 10px; margin: 0 -10px 15px -10px; z-index: 100; }
+        .busca-input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #94a3b8; font-size: 0.95rem; background: white; box-sizing: border-box; -webkit-appearance: none; outline: none; }
+        .busca-input:focus { border-color: #475569; }
     </style>
 </head>
 <body>
@@ -35,6 +38,9 @@
         <button id="btn-lock-toggle" class="btn-base btn-lock">🔒 Seguro</button>
         <button class="btn-base btn-share" onclick="partilharLink()">🔗 Compartilhar</button>
         <button class="btn-base btn-clear" onclick="limparAlbum()">🗑️ Zerar</button>
+    </div>
+    <div class="busca-container">
+        <input id="busca" class="busca-input" type="search" placeholder="🔍 Buscar país (PT, EN, original ou código)..." autocomplete="off">
     </div>
     <div id="album-container"></div>
     <script>
@@ -84,8 +90,78 @@
         btnLock.addEventListener('contextmenu', e => e.preventDefault());
 
         const coresGrupos = { 'Inicio': '#808080', 'GrupoA': '#599b41', 'GrupoB': '#d3222a', 'GrupoC': '#ffcc00', 'GrupoD': '#212869', 'GrupoE': '#ea1b23', 'GrupoF': '#008761', 'GrupoG': '#c7b6d1', 'GrupoH': '#449999', 'GrupoI': '#3a2674', 'GrupoJ': '#f37861', 'GrupoK': '#dc1f26', 'GrupoL': '#b01c20', 'Fim': '#808080' };
+
+        const equipeAliases = {
+            'Cidades-Sede': ['Cidades-Sede', 'Host Cities', 'Sedes', 'Estádios'],
+            'Mexico': ['Mexico', 'México'],
+            'South Africa': ['South Africa', 'África do Sul'],
+            'Korea Republic': ['Korea Republic', 'South Korea', 'Coreia do Sul', 'Coreia', 'Korea'],
+            'Czechia': ['Czechia', 'Czech Republic', 'República Tcheca', 'Tchéquia', 'Chéquia'],
+            'Canada': ['Canada', 'Canadá'],
+            'Bosnia-Herzegovina': ['Bosnia-Herzegovina', 'Bosnia and Herzegovina', 'Bósnia e Herzegovina', 'Bósnia'],
+            'Qatar': ['Qatar', 'Catar'],
+            'Switzerland': ['Switzerland', 'Suíça', 'Suisse', 'Schweiz', 'Svizzera'],
+            'Brazil': ['Brazil', 'Brasil'],
+            'Morocco': ['Morocco', 'Marrocos', 'Maroc', 'Al-Maghrib'],
+            'Haiti': ['Haiti', 'Haïti'],
+            'Scotland': ['Scotland', 'Escócia', 'Alba'],
+            'USA': ['USA', 'United States', 'United States of America', 'Estados Unidos', 'EUA'],
+            'Paraguay': ['Paraguay', 'Paraguai'],
+            'Australia': ['Australia', 'Austrália'],
+            'Türkiye': ['Türkiye', 'Turkey', 'Turquia'],
+            'Germany': ['Germany', 'Alemanha', 'Deutschland'],
+            'Curaçao': ['Curaçao', 'Curacao', 'Curaçau'],
+            "Côte d'Ivoire": ["Côte d'Ivoire", "Cote d'Ivoire", 'Ivory Coast', 'Costa do Marfim'],
+            'Ecuador': ['Ecuador', 'Equador'],
+            'Netherlands': ['Netherlands', 'Holanda', 'Países Baixos', 'Nederland', 'Holland'],
+            'Japan': ['Japan', 'Japão', 'Nihon', 'Nippon'],
+            'Sweden': ['Sweden', 'Suécia', 'Sverige'],
+            'Tunisia': ['Tunisia', 'Tunísia', 'Tunisie'],
+            'Belgium': ['Belgium', 'Bélgica', 'België', 'Belgique'],
+            'Egypt': ['Egypt', 'Egito', 'Egipto', 'Misr'],
+            'IR Iran': ['IR Iran', 'Iran', 'Irã', 'Irão'],
+            'New Zealand': ['New Zealand', 'Nova Zelândia', 'Aotearoa'],
+            'Spain': ['Spain', 'Espanha', 'España'],
+            'Cabo Verde': ['Cabo Verde', 'Cape Verde'],
+            'Saudi Arabia': ['Saudi Arabia', 'Arábia Saudita'],
+            'Uruguai': ['Uruguay', 'Uruguai'],
+            'France': ['France', 'França', 'Frankreich'],
+            'Senegal': ['Senegal'],
+            'Iraq': ['Iraq', 'Iraque', 'Al-Iraq'],
+            'Norway': ['Norway', 'Noruega', 'Norge', 'Noreg'],
+            'Argentina': ['Argentina'],
+            'Algeria': ['Algeria', 'Argélia', 'Algérie', 'Al-Jazair'],
+            'Austria': ['Austria', 'Áustria', 'Österreich'],
+            'Jordan': ['Jordan', 'Jordânia', 'Al-Urdunn'],
+            'Portugal': ['Portugal'],
+            'Congo DR': ['Congo DR', 'DR Congo', 'República Democrática do Congo', 'RD Congo', 'Congo'],
+            'Uzbekistan': ['Uzbekistan', 'Uzbequistão', "O'zbekiston"],
+            'Colombia': ['Colombia', 'Colômbia'],
+            'England': ['England', 'Inglaterra'],
+            'Croatia': ['Croatia', 'Croácia', 'Hrvatska'],
+            'Ghana': ['Ghana', 'Gana'],
+            'Panama': ['Panama', 'Panamá'],
+            'FIFA World Cup History': ['FIFA World Cup History', 'História', 'Museu FIFA']
+        };
+        function normalize(s) { return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+        function buildSearchKey(equipe) {
+            const aliases = equipeAliases[equipe.nome] || [equipe.nome];
+            return [equipe.prefixo, ...aliases].map(normalize).join('|');
+        }
+        function filtrarBusca() {
+            const termo = normalize(document.getElementById('busca').value.trim());
+            document.querySelectorAll('.grupo').forEach(divGrupo => {
+                let grupoTemMatch = false;
+                divGrupo.querySelectorAll('.equipe-block').forEach(divEquipe => {
+                    const match = !termo || divEquipe.dataset.search.includes(termo);
+                    divEquipe.style.display = match ? '' : 'none';
+                    if (match) grupoTemMatch = true;
+                });
+                divGrupo.style.display = grupoTemMatch ? '' : 'none';
+            });
+        }
         // ... (resto do array albumData segue o seu original) ...
-        const albumData = [{ id: 'Inicio', nome: 'Início', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup 2026', start: 1, end: 8, cor: '#c0c0c0', txt: '#000000' }] }, { id: 'GrupoA', nome: 'Grupo A', equipes: [{ prefixo: 'MEX', nome: 'Mexico', total: 20, cor: '#006341', txt: '#ffffff' }, { prefixo: 'RSA', nome: 'South Africa', total: 20, cor: '#FFB81C', txt: '#000000' }, { prefixo: 'KOR', nome: 'Korea Republic', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'CZE', nome: 'Czechia', total: 20, cor: '#ED1B24', txt: '#ffffff' }] }, { id: 'GrupoB', nome: 'Grupo B', equipes: [{ prefixo: 'CAN', nome: 'Canada', total: 20, cor: '#C5281C', txt: '#ffffff' }, { prefixo: 'BIH', nome: 'Bosnia-Herzegovina', total: 20, cor: '#002F6C', txt: '#ffffff' }, { prefixo: 'QAT', nome: 'Qatar', total: 20, cor: '#8A1538', txt: '#ffffff' }, { prefixo: 'SUI', nome: 'Switzerland', total: 20, cor: '#FF0000', txt: '#ffffff' }] }, { id: 'GrupoC', nome: 'Grupo C', equipes: [{ prefixo: 'BRA', nome: 'Brazil', total: 20, cor: '#FFDC02', txt: '#000000' }, { prefixo: 'MAR', nome: 'Morocco', total: 20, cor: '#C1272D', txt: '#ffffff' }, { prefixo: 'HAI', nome: 'Haiti', total: 20, cor: '#00205B', txt: '#ffffff' }, { prefixo: 'SCO', nome: 'Scotland', total: 20, cor: '#001B49', txt: '#ffffff' }] }, { id: 'GrupoD', nome: 'Grupo D', equipes: [{ prefixo: 'USA', nome: 'USA', total: 20, cor: '#002868', txt: '#ffffff' }, { prefixo: 'PAR', nome: 'Paraguay', total: 20, cor: '#D52B1E', txt: '#ffffff' }, { prefixo: 'AUS', nome: 'Australia', total: 20, cor: '#FFCD00', txt: '#000000' }, { prefixo: 'TUR', nome: 'Türkiye', total: 20, cor: '#E30A17', txt: '#ffffff' }] }, { id: 'GrupoE', nome: 'Grupo E', equipes: [{ prefixo: 'GER', nome: 'Germany', total: 20, cor: '#111111', txt: '#ffffff' }, { prefixo: 'CUW', nome: 'Curaçao', total: 20, cor: '#002776', txt: '#ffffff' }, { prefixo: 'CIV', nome: 'Côte d\'Ivoire', total: 20, cor: '#F77F00', txt: '#000000' }, { prefixo: 'ECU', nome: 'Ecuador', total: 20, cor: '#FFDD00', txt: '#000000' }] }, { id: 'GrupoF', nome: 'Grupo F', equipes: [{ prefixo: 'NED', nome: 'Netherlands', total: 20, cor: '#F36C21', txt: '#ffffff' }, { prefixo: 'JPN', nome: 'Japan', total: 20, cor: '#000555', txt: '#ffffff' }, { prefixo: 'SWE', nome: 'Sweden', total: 20, cor: '#FFF200', txt: '#000000' }, { prefixo: 'TUN', nome: 'Tunisia', total: 20, cor: '#E70013', txt: '#ffffff' }] }, { id: 'GrupoG', nome: 'Grupo G', equipes: [{ prefixo: 'BEL', nome: 'Belgium', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'EGY', nome: 'Egypt', total: 20, cor: '#C8102E', txt: '#ffffff' }, { prefixo: 'IRN', nome: 'IR Iran', total: 20, cor: '#15A05C', txt: '#ffffff' }, { prefixo: 'NZL', nome: 'New Zealand', total: 20, cor: '#111111', txt: '#ffffff' }] }, { id: 'GrupoH', nome: 'Grupo H', equipes: [{ prefixo: 'ESP', nome: 'Spain', total: 20, cor: '#C60B1E', txt: '#ffffff' }, { prefixo: 'CPV', nome: 'Cabo Verde', total: 20, cor: '#003893', txt: '#ffffff' }, { prefixo: 'KSA', nome: 'Saudi Arabia', total: 20, cor: '#006C35', txt: '#ffffff' }, { prefixo: 'URU', nome: 'Uruguai', total: 20, cor: '#5CB4E5', txt: '#000000' }] }, { id: 'GrupoI', nome: 'Grupo I', equipes: [{ prefixo: 'FRA', nome: 'France', total: 20, cor: '#002654', txt: '#ffffff' }, { prefixo: 'SEN', nome: 'Senegal', total: 20, cor: '#00853F', txt: '#ffffff' }, { prefixo: 'IRQ', nome: 'Iraq', total: 20, cor: '#007A3D', txt: '#ffffff' }, { prefixo: 'NOR', nome: 'Norway', total: 20, cor: '#C8102E', txt: '#ffffff' }] }, { id: 'GrupoJ', nome: 'Grupo J', equipes: [{ prefixo: 'ARG', nome: 'Argentina', total: 20, cor: '#43A1D5', txt: '#000000' }, { prefixo: 'ALG', nome: 'Algeria', total: 20, cor: '#006233', txt: '#ffffff' }, { prefixo: 'AUT', nome: 'Austria', total: 20, cor: '#ED2939', txt: '#ffffff' }, { prefixo: 'JOR', nome: 'Jordan', total: 20, cor: '#E30A17', txt: '#ffffff' }] }, { id: 'GrupoK', nome: 'Grupo K', equipes: [{ prefixo: 'POR', nome: 'Portugal', total: 20, cor: '#DA291C', txt: '#ffffff' }, { prefixo: 'COD', nome: 'Congo DR', total: 20, cor: '#00AEEF', txt: '#000000' }, { prefixo: 'UZB', nome: 'Uzbekistan', total: 20, cor: '#0099B5', txt: '#ffffff' }, { prefixo: 'COL', nome: 'Colombia', total: 20, cor: '#FCD116', txt: '#000000' }] }, { id: 'GrupoL', nome: 'Grupo L', equipes: [{ prefixo: 'ENG', nome: 'England', total: 20, cor: '#CE1126', txt: '#ffffff' }, { prefixo: 'CRO', nome: 'Croatia', total: 20, cor: '#ED1C24', txt: '#ffffff' }, { prefixo: 'GHA', nome: 'Ghana', total: 20, cor: '#FCD116', txt: '#000000' }, { prefixo: 'PAN', nome: 'Panama', total: 20, cor: '#DA291C', txt: '#ffffff' }] }, { id: 'Fim', nome: 'História (Museu FIFA)', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup History', start: 9, end: 20, cor: '#c0c0c0', txt: '#000000' }] }];
+        const albumData = [{ id: 'Inicio', nome: 'Início', equipes: [{ prefixo: 'FWC', nome: 'Cidades-Sede', start: 1, end: 8, cor: '#c0c0c0', txt: '#000000' }] }, { id: 'GrupoA', nome: 'Grupo A', equipes: [{ prefixo: 'MEX', nome: 'Mexico', total: 20, cor: '#006341', txt: '#ffffff' }, { prefixo: 'RSA', nome: 'South Africa', total: 20, cor: '#FFB81C', txt: '#000000' }, { prefixo: 'KOR', nome: 'Korea Republic', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'CZE', nome: 'Czechia', total: 20, cor: '#ED1B24', txt: '#ffffff' }] }, { id: 'GrupoB', nome: 'Grupo B', equipes: [{ prefixo: 'CAN', nome: 'Canada', total: 20, cor: '#C5281C', txt: '#ffffff' }, { prefixo: 'BIH', nome: 'Bosnia-Herzegovina', total: 20, cor: '#002F6C', txt: '#ffffff' }, { prefixo: 'QAT', nome: 'Qatar', total: 20, cor: '#8A1538', txt: '#ffffff' }, { prefixo: 'SUI', nome: 'Switzerland', total: 20, cor: '#FF0000', txt: '#ffffff' }] }, { id: 'GrupoC', nome: 'Grupo C', equipes: [{ prefixo: 'BRA', nome: 'Brazil', total: 20, cor: '#FFDC02', txt: '#000000' }, { prefixo: 'MAR', nome: 'Morocco', total: 20, cor: '#C1272D', txt: '#ffffff' }, { prefixo: 'HAI', nome: 'Haiti', total: 20, cor: '#00205B', txt: '#ffffff' }, { prefixo: 'SCO', nome: 'Scotland', total: 20, cor: '#001B49', txt: '#ffffff' }] }, { id: 'GrupoD', nome: 'Grupo D', equipes: [{ prefixo: 'USA', nome: 'USA', total: 20, cor: '#002868', txt: '#ffffff' }, { prefixo: 'PAR', nome: 'Paraguay', total: 20, cor: '#D52B1E', txt: '#ffffff' }, { prefixo: 'AUS', nome: 'Australia', total: 20, cor: '#FFCD00', txt: '#000000' }, { prefixo: 'TUR', nome: 'Türkiye', total: 20, cor: '#E30A17', txt: '#ffffff' }] }, { id: 'GrupoE', nome: 'Grupo E', equipes: [{ prefixo: 'GER', nome: 'Germany', total: 20, cor: '#111111', txt: '#ffffff' }, { prefixo: 'CUW', nome: 'Curaçao', total: 20, cor: '#002776', txt: '#ffffff' }, { prefixo: 'CIV', nome: 'Côte d\'Ivoire', total: 20, cor: '#F77F00', txt: '#000000' }, { prefixo: 'ECU', nome: 'Ecuador', total: 20, cor: '#FFDD00', txt: '#000000' }] }, { id: 'GrupoF', nome: 'Grupo F', equipes: [{ prefixo: 'NED', nome: 'Netherlands', total: 20, cor: '#F36C21', txt: '#ffffff' }, { prefixo: 'JPN', nome: 'Japan', total: 20, cor: '#000555', txt: '#ffffff' }, { prefixo: 'SWE', nome: 'Sweden', total: 20, cor: '#FFF200', txt: '#000000' }, { prefixo: 'TUN', nome: 'Tunisia', total: 20, cor: '#E70013', txt: '#ffffff' }] }, { id: 'GrupoG', nome: 'Grupo G', equipes: [{ prefixo: 'BEL', nome: 'Belgium', total: 20, cor: '#E30613', txt: '#ffffff' }, { prefixo: 'EGY', nome: 'Egypt', total: 20, cor: '#C8102E', txt: '#ffffff' }, { prefixo: 'IRN', nome: 'IR Iran', total: 20, cor: '#15A05C', txt: '#ffffff' }, { prefixo: 'NZL', nome: 'New Zealand', total: 20, cor: '#111111', txt: '#ffffff' }] }, { id: 'GrupoH', nome: 'Grupo H', equipes: [{ prefixo: 'ESP', nome: 'Spain', total: 20, cor: '#C60B1E', txt: '#ffffff' }, { prefixo: 'CPV', nome: 'Cabo Verde', total: 20, cor: '#003893', txt: '#ffffff' }, { prefixo: 'KSA', nome: 'Saudi Arabia', total: 20, cor: '#006C35', txt: '#ffffff' }, { prefixo: 'URU', nome: 'Uruguai', total: 20, cor: '#5CB4E5', txt: '#000000' }] }, { id: 'GrupoI', nome: 'Grupo I', equipes: [{ prefixo: 'FRA', nome: 'France', total: 20, cor: '#002654', txt: '#ffffff' }, { prefixo: 'SEN', nome: 'Senegal', total: 20, cor: '#00853F', txt: '#ffffff' }, { prefixo: 'IRQ', nome: 'Iraq', total: 20, cor: '#007A3D', txt: '#ffffff' }, { prefixo: 'NOR', nome: 'Norway', total: 20, cor: '#C8102E', txt: '#ffffff' }] }, { id: 'GrupoJ', nome: 'Grupo J', equipes: [{ prefixo: 'ARG', nome: 'Argentina', total: 20, cor: '#43A1D5', txt: '#000000' }, { prefixo: 'ALG', nome: 'Algeria', total: 20, cor: '#006233', txt: '#ffffff' }, { prefixo: 'AUT', nome: 'Austria', total: 20, cor: '#ED2939', txt: '#ffffff' }, { prefixo: 'JOR', nome: 'Jordan', total: 20, cor: '#E30A17', txt: '#ffffff' }] }, { id: 'GrupoK', nome: 'Grupo K', equipes: [{ prefixo: 'POR', nome: 'Portugal', total: 20, cor: '#DA291C', txt: '#ffffff' }, { prefixo: 'COD', nome: 'Congo DR', total: 20, cor: '#00AEEF', txt: '#000000' }, { prefixo: 'UZB', nome: 'Uzbekistan', total: 20, cor: '#0099B5', txt: '#ffffff' }, { prefixo: 'COL', nome: 'Colombia', total: 20, cor: '#FCD116', txt: '#000000' }] }, { id: 'GrupoL', nome: 'Grupo L', equipes: [{ prefixo: 'ENG', nome: 'England', total: 20, cor: '#CE1126', txt: '#ffffff' }, { prefixo: 'CRO', nome: 'Croatia', total: 20, cor: '#ED1C24', txt: '#ffffff' }, { prefixo: 'GHA', nome: 'Ghana', total: 20, cor: '#FCD116', txt: '#000000' }, { prefixo: 'PAN', nome: 'Panama', total: 20, cor: '#DA291C', txt: '#ffffff' }] }, { id: 'Fim', nome: 'História (Museu FIFA)', equipes: [{ prefixo: 'FWC', nome: 'FIFA World Cup History', start: 9, end: 20, cor: '#c0c0c0', txt: '#000000' }] }];
 
         function isFaltando(id) { const salvo = localStorage.getItem(id); return salvo === null ? true : salvo === 'true'; }
         function toggleSticker(id, elemento) {
@@ -175,7 +251,10 @@
                 const divGrupo = document.createElement('div'); divGrupo.className = 'grupo';
                 divGrupo.innerHTML = `<h2 style="color: ${coresGrupos[grupo.id]}; border-bottom-color: ${coresGrupos[grupo.id]}55;">${grupo.nome}</h2>`;
                 grupo.equipes.forEach(equipe => {
-                    const divEquipe = document.createElement('div'); divEquipe.innerHTML = `<div class="selecao-titulo">${equipe.nome}</div>`;
+                    const divEquipe = document.createElement('div');
+                    divEquipe.className = 'equipe-block';
+                    divEquipe.dataset.search = buildSearchKey(equipe);
+                    divEquipe.innerHTML = `<div class="selecao-titulo">${equipe.nome}</div>`;
                     const grid = document.createElement('div'); grid.className = 'figurinhas-grid';
                     const inicioNum = equipe.start || 1; const fimNum = equipe.end || equipe.total;
                     for (let i = inicioNum; i <= fimNum; i++) {
@@ -231,7 +310,9 @@
                 });
                 container.appendChild(divGrupo);
             });
+            filtrarBusca();
         }
+        document.getElementById('busca').addEventListener('input', filtrarBusca);
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const backup = urlParams.get('backup');
