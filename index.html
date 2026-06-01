@@ -24,8 +24,13 @@
         .fig:not(.faltando) { background: var(--cor-camisa); color: var(--cor-texto-clara); border-color: var(--cor-borda); box-shadow: 0 3px 6px rgba(0,0,0,0.25); opacity: 1; }
         #progress-ring { position: fixed; pointer-events: none; transform: translate(-50%, -50%); opacity: 0; z-index: 9999; }
         .busca-container { position: sticky; top: 0; background: #cbd5e1; padding: 8px 10px 12px 10px; margin: 0 -10px 15px -10px; z-index: 100; }
-        .busca-input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid #94a3b8; font-size: 0.95rem; background: white; box-sizing: border-box; -webkit-appearance: none; outline: none; }
+        .busca-wrapper { position: relative; }
+        .busca-input { width: 100%; padding: 10px 38px 10px 14px; border-radius: 8px; border: 1px solid #94a3b8; font-size: 0.95rem; background: white; box-sizing: border-box; -webkit-appearance: none; outline: none; }
         .busca-input:focus { border-color: #475569; }
+        .busca-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+        .busca-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 50%; border: none; background: #cbd5e1; color: #475569; font-size: 14px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; }
+        .busca-clear.visible { display: flex; }
+        .busca-clear:active { background: #94a3b8; }
     </style>
 </head>
 <body>
@@ -40,7 +45,10 @@
         <button class="btn-base btn-clear" onclick="limparAlbum()">🗑️ Zerar</button>
     </div>
     <div class="busca-container">
-        <input id="busca" class="busca-input" type="search" placeholder="🔍 Buscar país (PT, EN, original ou código)..." autocomplete="off">
+        <div class="busca-wrapper">
+            <input id="busca" class="busca-input" type="search" placeholder="🔍 Buscar país (PT, EN, original ou código)..." autocomplete="off">
+            <button id="busca-clear" class="busca-clear" type="button" aria-label="Limpar busca">✕</button>
+        </div>
     </div>
     <div id="album-container"></div>
     <script>
@@ -92,7 +100,7 @@
         const coresGrupos = { 'Inicio': '#808080', 'GrupoA': '#599b41', 'GrupoB': '#d3222a', 'GrupoC': '#ffcc00', 'GrupoD': '#212869', 'GrupoE': '#ea1b23', 'GrupoF': '#008761', 'GrupoG': '#c7b6d1', 'GrupoH': '#449999', 'GrupoI': '#3a2674', 'GrupoJ': '#f37861', 'GrupoK': '#dc1f26', 'GrupoL': '#b01c20', 'Fim': '#808080' };
 
         const equipeAliases = {
-            'FIFA World Cup': ['FIFA World Cup', 'Host Cities', 'Taça', 'Estádios', 'Copa'],
+            'FIFA World Cup': ['FIFA World Cup', 'Copa do Mundo', 'World Cup', 'Mundial', 'Copa'],
             'Mexico': ['Mexico', 'México'],
             'South Africa': ['South Africa', 'África do Sul'],
             'Korea Republic': ['Korea Republic', 'South Korea', 'Coreia do Sul', 'Coreia', 'Korea'],
@@ -149,7 +157,9 @@
             return [equipe.prefixo, ...aliases].map(normalize).join('|');
         }
         function filtrarBusca() {
-            const termo = normalize(document.getElementById('busca').value.trim());
+            const inputEl = document.getElementById('busca');
+            const termo = normalize(inputEl.value.trim());
+            document.getElementById('busca-clear').classList.toggle('visible', inputEl.value.length > 0);
             document.querySelectorAll('.grupo').forEach(divGrupo => {
                 let grupoTemMatch = false;
                 divGrupo.querySelectorAll('.equipe-block').forEach(divEquipe => {
@@ -313,6 +323,12 @@
             filtrarBusca();
         }
         document.getElementById('busca').addEventListener('input', filtrarBusca);
+        document.getElementById('busca-clear').addEventListener('click', () => {
+            const inputEl = document.getElementById('busca');
+            inputEl.value = '';
+            inputEl.focus();
+            filtrarBusca();
+        });
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const backup = urlParams.get('backup');
