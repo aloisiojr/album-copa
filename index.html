@@ -6,10 +6,15 @@
     <title>Álbum de Figurinhas 2026</title>
     <style>
         * { box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 10px; background-color: #cbd5e1; margin: 0; -webkit-tap-highlight-color: transparent; }
-        h1 { text-align: center; color: #1e293b; font-size: 1.5rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
-        .sync-container { display: flex; justify-content: center; gap: 8px; margin-bottom: 25px; flex-wrap: wrap; }
-        .btn-base { padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 5px; border: 1px solid; box-shadow: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 8px; background-color: #cbd5e1; margin: 0; -webkit-tap-highlight-color: transparent; }
+        .header-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 4px 0; }
+        .header-row h1 { color: #1e293b; font-size: 1.05rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
+        .header-pct { color: #1e293b; font-size: 1.05rem; font-weight: 700; }
+        .progress-bar { position: relative; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin: 0 0 2px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #16a34a); border-radius: 4px; transition: width 0.3s ease; }
+        .progress-text { font-size: 0.72rem; color: #475569; text-align: center; margin: 0 0 6px 0; }
+        .sync-container { display: flex; justify-content: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+        .btn-base { padding: 5px 10px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: opacity 0.2s, transform 0.1s; display: flex; align-items: center; gap: 4px; border: 1px solid; box-shadow: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
         .btn-base:active { opacity: 0.8; transform: scale(0.95); }
         .btn-share { background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
         .btn-clear { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; }
@@ -23,12 +28,12 @@
         .fig.faltando { background: #f8fafc; color: var(--cor-texto-faltando); opacity: 0.6; box-shadow: none; }
         .fig:not(.faltando) { background: var(--cor-camisa); color: var(--cor-texto-clara); border-color: var(--cor-borda); box-shadow: 0 3px 6px rgba(0,0,0,0.25); opacity: 1; }
         #progress-ring { position: fixed; pointer-events: none; transform: translate(-50%, -50%); opacity: 0; z-index: 9999; }
-        .busca-container { position: sticky; top: 0; background: #cbd5e1; padding: 8px 10px 12px 10px; margin: 0 -10px 15px -10px; z-index: 100; }
+        .busca-container { position: sticky; top: 0; background: #cbd5e1; padding: 4px 8px 8px 8px; margin: 0 -8px 10px -8px; z-index: 100; }
         .busca-wrapper { position: relative; }
-        .busca-input { width: 100%; padding: 10px 38px 10px 14px; border-radius: 8px; border: 1px solid #94a3b8; font-size: 0.95rem; background: white; box-sizing: border-box; -webkit-appearance: none; outline: none; }
+        .busca-input { width: 100%; padding: 7px 34px 7px 12px; border-radius: 6px; border: 1px solid #94a3b8; font-size: 0.85rem; background: white; box-sizing: border-box; -webkit-appearance: none; outline: none; }
         .busca-input:focus { border-color: #475569; }
         .busca-input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
-        .busca-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 50%; border: none; background: #cbd5e1; color: #475569; font-size: 14px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; }
+        .busca-clear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; border-radius: 50%; border: none; background: #cbd5e1; color: #475569; font-size: 13px; line-height: 1; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; }
         .busca-clear.visible { display: flex; }
         .busca-clear:active { background: #94a3b8; }
     </style>
@@ -38,7 +43,12 @@
         <circle cx="70" cy="70" r="60" stroke="rgba(0,0,0,0.15)" stroke-width="8" fill="none" />
         <circle id="progress-ring-circle" cx="70" cy="70" r="60" stroke="#3498db" stroke-width="8" fill="none" stroke-dasharray="377" stroke-dashoffset="377" transform="rotate(-90 70 70)" stroke-linecap="round"/>
     </svg>
-    <h1>Meu Álbum 2026</h1>
+    <div class="header-row">
+        <h1>Meu Álbum 2026</h1>
+        <span id="header-pct" class="header-pct">0%</span>
+    </div>
+    <div class="progress-bar"><div id="progress-fill" class="progress-fill" style="width: 0%"></div></div>
+    <div id="progress-text" class="progress-text">0 de 0 · faltam 0</div>
     <div class="sync-container">
         <button id="btn-lock-toggle" class="btn-base btn-lock">🔒 Seguro</button>
         <button class="btn-base btn-share" onclick="partilharLink()">🔗 Compartilhar</button>
@@ -180,6 +190,23 @@
             if (!estavaFaltando) elemento.classList.add('faltando');
             else elemento.classList.remove('faltando');
             if(navigator.vibrate) navigator.vibrate(50);
+            atualizarProgresso();
+        }
+        function atualizarProgresso() {
+            let total = 0, temos = 0;
+            albumData.forEach(grupo => grupo.equipes.forEach(equipe => {
+                const inicioNum = equipe.start || 1;
+                const fimNum = equipe.end || equipe.total;
+                for (let i = inicioNum; i <= fimNum; i++) {
+                    total++;
+                    if (localStorage.getItem(`${equipe.prefixo} ${i}`) === 'false') temos++;
+                }
+            }));
+            const pct = total ? (temos / total * 100) : 0;
+            const pctStr = pct.toFixed(1).replace('.', ',') + '%';
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('header-pct').textContent = pctStr;
+            document.getElementById('progress-text').textContent = `${temos} de ${total} · faltam ${total - temos}`;
         }
 
         const B64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -321,6 +348,7 @@
                 container.appendChild(divGrupo);
             });
             filtrarBusca();
+            atualizarProgresso();
         }
         document.getElementById('busca').addEventListener('input', filtrarBusca);
         document.getElementById('busca-clear').addEventListener('click', () => {
